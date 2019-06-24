@@ -1,16 +1,73 @@
-# kaitai-struct-vscode README
+# kaitai-struct-vscode [BETA]
 
-This is the README for your extension "kaitai-struct-vscode". After writing up a brief description, we recommend including the following sections.
+This is an extension built by Dominick Reba (@fudgepop01) that allows for relative ease of development
+of ksy files. To find out more about Kaitai Struct and what it can do,
+head here: [[kaitai.io](https://kaitai.io/)]
+
+this is the first extension to utilize the [[fudgedit](https://fudgepop01.github.io/)] hex editor. An extension
+exposing the editor itself will be released at a later date if requested.
 
 ## Features
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+### regions: highlighting with depth
 
-For example if there is an image subfolder under your extension project workspace:
+A _region_ is the name I've given to the different chunks of a file.
+_Depth_ refers to how many layers are traversed and visualized in the hex viewer.  
+Take the following example ksy:
 
-\!\[feature X\]\(images/feature-x.png\)
+```yaml
+seq:
+  - id: no_subregions
+    type: u4
+  - id: has_subregions
+    type: example_type
+types:
+  example_type:
+    seq:
+      - id: first_child
+        type: u4
+      - id: second_child
+        type: u2
+```
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+When the region depth parameter has a value of 1, only the regions representing
+the `no_subregions` and `has_subregions` will show up. However, with a region
+depth of 2, the individual components of `has_subregions`, `first_child` and
+`second_child`, will appear and overlap its parent (`has_subregions`).
+
+### regions: tooltips
+
+When hovering over one of these generated regions, you'll see some data about
+the underlying region in the form of a tooltip. This tooltip will contain
+at minumum a `name` (the `id` from the ksy) and the `size` of the region (along
+with start and end positions in brackets)
+
+Hovering over regions will grey out all other regions to allow the
+the user to focus on what particular region is being highlighted and
+distinguish it from the others.
+
+Hovering over a region with a raw value type, such as string or integer
+will (read: _should_) additionally display the obtained value in the best way it can.
+
+### tree views
+
+Upon compiling a kaitai struct file, a tree view in the explorer panel will pop up
+(if enabled). This will be titled KSEXPLORER (Kaitai Struct EXPLORER), and contains
+a tree view of all of the region names along with their types (or values). This
+will also give the user a bit more control over the editor.
+
+### tree views: navigation
+
+if a tree view's node has children, then a dropdown toggle will appear at the
+start of the node. Clicking this will expand that region and show the child nodes.
+
+### tree views: jumping
+
+By clicking on one of the tree's nodes, the hex editor will jump to the location of
+that node in the hex, place the cursor at the starting byte of the node, and select
+the area occupied by the node in the editor. This allows the user to navigate and
+view regions significantly easier, or focus on particular regions without the color
+overlay.
 
 ## Requirements
 
@@ -31,6 +88,31 @@ This extension contributes the following settings:
 
 Calling out known issues can help limit users opening duplicate issues against your extension.
 
+## TODO / PLANNED FEATURES
+
+* [ ] fudgedit
+  * [x] initial integration with vscode
+  * [ ] bundle fudgedit with the extension rather than pulling from unpkg
+* [x] regions
+  * [x] ensure arrays work
+  * [x] render instances properly
+  * [x] render sequences properly
+* [x] tree view
+* [ ] intuitive webview GUI
+  * [ ] region depth adjustment (_technically_ speaking this is implemented)
+  * [ ] property adjustment
+    * [ ] line width
+    * [ ] number of lines
+    * [ ] group size
+    * [ ] inline ASCII toggle
+    * [ ] editor mode toggle
+  * [ ] selected byte value viewer
+* [ ] optimization / usability
+  * [x] use base64 to transfer data to/from webview
+  * [ ] a scrollbar
+  * [ ] lazy load instances when possible
+  * [ ] edit / save opened files directly via fudgedit
+
 ## Release Notes
 
 Users appreciate release notes as you update your extension.
@@ -46,20 +128,3 @@ Fixed issue #.
 ### 1.1.0
 
 Added features X, Y, and Z.
-
------------------------------------------------------------------------------------------------------------
-
-## Working with Markdown
-
-**Note:** You can author your README using Visual Studio Code.  Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on OSX or `Ctrl+\` on Windows and Linux)
-* Toggle preview (`Shift+CMD+V` on OSX or `Shift+Ctrl+V` on Windows and Linux)
-* Press `Ctrl+Space` (Windows, Linux) or `Cmd+Space` (OSX) to see a list of Markdown snippets
-
-### For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**

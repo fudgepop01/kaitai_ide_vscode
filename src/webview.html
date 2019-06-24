@@ -8,51 +8,19 @@
     import { defineCustomElements } from '{{EXTENSION_PATH}}/node_modules/fudgedit/dist/esm/index.js';
     defineCustomElements(window);
   </script> -->
-  <script src="https://unpkg.com/fudgedit@0.0.1/dist/fudgeapps.js"></script>
+  <script src="https://unpkg.com/fudgedit@0.1.3/dist/fudgeapps.js"></script>
   <title>Kaitai Struct IDE</title>
   <style>
-    #MEASURE {
-      box-sizing: border-box !important;
-      width: 28px !important;
-    }
     fudge-hex-editor * {
       color: black;
     }
-    fudge-hex-editor .hexView span {
-      box-sizing: border-box !important;
-      width: 28px !important;
-    }
-    fudge-tooltip {
-      position: fixed;
-      display: none;
-
-      box-sizing: border-box;
-      font-size: 14px;
-      max-width: 400px;
-      padding: 5px;
-      border-radius: 2px;
-
-      background-color: #000;
-      color: white;
-
-      z-index: 1000;
-      pointer-events: none;
-    }
-
-    fudge-tooltip[active=true] {
-      display: block;
-      left: calc(var(--mouse-x) * 1px);
-      top: calc(var(--mouse-y) * 1px);
-      transition: .2s left ease, .2s top ease;
-    }
-
   </style>
 </head>
 <body style="width: 100%; height: 100%; background-color: white;">
 
   <input type="number" name="regionDepth" id="regionDepth" value="2" onchange="document.getElementById('editor').setAttribute('region-depth', event.target.value)">
-  <fudge-tooltip id="tooltip"></fudge-tooltip>
-  <fudge-hex-editor id="editor"></fudge-hex-editor>
+  <fudge-hex-tooltip id="tooltip"></fudge-hex-tooltip>
+  <fudge-hex-editor id="editor" edit-type="readonly"></fudge-hex-editor>
 
   <script>
     (function() {
@@ -60,7 +28,6 @@
 
       const editor = document.getElementById("editor");
       editor.addEventListener("hexCursorChanged", (newCursorPosition) => {
-        console.log('derp');
         vscode.postMessage({
           event: 'hexCursorChanged',
           args: newCursorPosition
@@ -74,10 +41,16 @@
             editor.acceptFile(new File([Uint8Array.from(atob(f.bits), c => c.charCodeAt(0))], f.name));
             break;
           case 'updateRegions':
-            console.log(data.regions);
-            editor.regions = data.regions;
+            editor.regions = JSON.parse(atob(data.regionB64));
             editor.mode = "region";
             break;
+          case 'jumpTo':
+            editor.setSelection({
+              start: data.start,
+              end: data.end
+            })
+            editor.setCursorPosition(data.start);
+            editor.setLineNumber(Math.floor(data.start / 16))
         }
       })
 
