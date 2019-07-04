@@ -11,15 +11,16 @@ interface ISimple {
 }
 
 const mergeData = (debugData: any, mainData: any, dataName: string) => {
-  if (debugData.arr) delete debugData.arr;
 
   let out = {
-    ...debugData,
+    start: debugData.start + debugData.ioOffset,
+    end: debugData.end + debugData.ioOffset,
+    ioOffset: debugData.ioOffset,
     name: dataName,
     array: false,
     type: mainData.constructor.name,
     subRegions: null,
-    strippedSubregions: null,
+    strippedSubRegions: null,
     content: null
   };
 

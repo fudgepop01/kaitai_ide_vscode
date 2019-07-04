@@ -6,10 +6,12 @@ import * as KaitaiCompiler from 'kaitai-struct-compiler';
 import { safeLoad as safeLoadYaml } from 'js-yaml';
 
 import { join as joinPath } from 'path';
-import { readFileSync } from 'fs';
+import { readFileSync, writeFileSync } from 'fs';
 
 import { analyzeStructure } from './util/regionAnalysis';
 import { KSExplorer } from './KSExplorerController';
+import supportedLangs from './util/supportedLangs';
+import { inspect } from 'util';
 
 
 
@@ -42,7 +44,8 @@ export default class editor implements vscode.Disposable {
       registerCommand(`${namespace}.openHexEditor`, this.onOpenHexEditor.bind(this)),
       registerCommand(`${namespace}.openFileAsHex`, this.onOpenFileAsHex.bind(this)),
       registerCommand(`${namespace}.compileAndExamine`, this.onCompileAndExamine.bind(this)),
-      registerCommand(`${namespace}.jumpToChunk`, (start, end) => this.onJumpToChunk(start, end - 1))
+      registerCommand(`${namespace}.jumpToChunk`, (start, end) => this.onJumpToChunk(start, end - 1)),
+      registerCommand(`${namespace}.compileKsy`, (Uri) => this.onCompileToTarget(Uri))
     ]);
   }
 
@@ -101,6 +104,7 @@ export default class editor implements vscode.Disposable {
         localResourceRoots: [
           vscode.Uri.file(joinPath(this.context.extensionPath, 'node_modules/fudgedit/dist'))
         ],
+        retainContextWhenHidden: true
       }
     );
 
@@ -138,6 +142,36 @@ export default class editor implements vscode.Disposable {
         name: 'derp'
       }
     })
+  }
+
+  private async onCompileToTarget(args: vscode.Uri) {
+    if (!args.fsPath.endsWith(".ksy")) throw new Error("the specified file is not a ksy file");
+
+    const rawKsy = readFileSync(args.fsPath, 'utf8');
+    const parsed = safeLoadYaml(rawKsy);
+    const compiler = new KaitaiCompiler();
+
+    vscode.window.showInformationMessage('choose a language');
+    const language = await vscode.window.showQuickPick(supportedLangs, {
+      placeHolder: 'javascript',
+    });
+    vscode.window.showInformationMessage('enable debug mode?')
+    const debug = await vscode.window.showQuickPick(['true', 'false'], {
+      placeHolder: 'false'
+    });
+
+    let compiled;
+    try {
+      compiled = await compiler.compile(language, parsed, null, debug === 'true');
+    } catch(e) {
+      console.log(e);
+      vscode.window.showErrorMessage(`${e.s$1}: ${e.e$1.s$1} \ntrace:\n${e.stackTrace$1}`);
+      return;
+    }
+
+    for (const [name, content] of Object.entries(compiled)){
+      writeFileSync(args.path.substring(0, args.fsPath.lastIndexOf('/') + 1) + name, content, 'utf8');
+    }
   }
 
   private async onCompileAndExamine(args: vscode.Uri) {

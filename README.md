@@ -7,6 +7,48 @@ head here: [[kaitai.io](https://kaitai.io/)]
 this is the first extension to utilize the [[fudgedit](https://fudgepop01.github.io/)] hex editor. An extension
 exposing the editor itself will be released at a later date if requested.
 
+## Usage
+
+1. open the command palette
+2. use the "open hex editor" command
+3. in the file explorer, right-click the file you wish to view
+4. select "open file as hex"
+5. if the file is large, wait a bit for it to load
+6. right click the ksy file you wish to visualize
+7. choose "compile and examine ksy"
+8. wait for it to process and send all the data
+9. enjoy your visualization
+
+> **Note**: currently the compiler only operates in "eager" mode. This will be updated to include
+> a lazy mode in a future release.  
+> **Avoid processing extremely large/complex files or else vscode may become unresponsive.**
+
+To generate a new parser from a ksy file in a target language, right click on a
+ksy file and select "compile to target language". A prompt will appear where you choose the
+target langugae of choice. Pick the language and a parser will be generated from the ksy.
+
+## Pro Tip
+
+To make editing ksy files significantly easier, you'll want to download the [[redhat YAML Language Server](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml)].
+Then you'll want to include the following lines in your `settings.json`:
+
+```json
+"files.associations": {
+    "*.ksy": "yaml"
+},
+"yaml.schemas": {
+    "https://raw.githubusercontent.com/kaitai-io/ksy_schema/master/ksy_schema.json": "*.ksy"
+},
+```
+
+The `files.associations` part will allow vscode to automaticaly open `ksy` files in `YAML` mode.
+The `yaml.schemas` part will give schema support to all `ksy` files, allowing for features
+such as autocompletion and validation.
+
+> **note**: there are still a few bugs in the schema to work out.  
+> Notably, enum/switch-on may give a false error expecting an object
+> and there is no duplicate key checking.
+
 ## Features
 
 ### regions: highlighting with depth

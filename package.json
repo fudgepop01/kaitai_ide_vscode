@@ -32,6 +32,10 @@
                 "title": "compile and examine ksy"
             },
             {
+                "command": "kaitaiStruct.compileKsy",
+                "title": "compile to target language"
+            },
+            {
                 "command": "kaitaiStruct.jumpToChunk",
                 "title": "jump to chunk"
             }
@@ -43,6 +47,10 @@
                 },
                 {
                     "command": "kaitaiStruct.compileAndExamine",
+                    "when": "resourceExtname == .ksy"
+                },
+                {
+                    "command": "kaitaiStruct.compileKsy",
                     "when": "resourceExtname == .ksy"
                 }
             ]

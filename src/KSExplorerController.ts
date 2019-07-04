@@ -38,8 +38,8 @@ export class KSTreeDataProvider implements vscode.TreeDataProvider<KSNode> {
     const {name, type, array, content} = element;
 
     return {
-      tooltip: JSON.stringify({...element, subRegions: '', content: (content !instanceof Uint8Array) ? content : '<Binary Data>' }, null, 2),
-      label: `${name}: ${(content || content === 0) ? content : type}${array ? "[" + element.subRegions.length + "]" : ''}`,
+      tooltip: JSON.stringify({...element, subRegions: "___", content: (!(content instanceof Uint8Array)) ? content : '<Binary Data>' }, null, 2),
+      label: `${name}: ${((content || content === 0) && !(content instanceof Uint8Array)) ? content : type}${array ? "[" + (element.subRegions || element.content as any[]).length + "]" : ''}`,
       collapsibleState: element.subRegions ? vscode.TreeItemCollapsibleState.Collapsed : void 0,
       command: (element.start == undefined) ? void 0 : {
         command: "kaitaiStruct.jumpToChunk",

@@ -4,10 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <!-- <script type="module">
-    import { defineCustomElements } from '{{EXTENSION_PATH}}/node_modules/fudgedit/dist/esm/index.js';
-    defineCustomElements(window);
-  </script> -->
+
   <script src="https://unpkg.com/fudgedit@0.1.3/dist/fudgeapps.js"></script>
   <title>Kaitai Struct IDE</title>
   <style>
@@ -89,14 +86,14 @@
 
   <div id="info-box">
     <div class="tabs">
-      <button id="infoTab" class="active" onclick="selectTab('info')">info</button>
-      <button id="settingsTab" onclick="selectTab('settings')">settings</button>
+      <button id="infoTab" onclick="selectTab('info')">info</button>
+      <button id="settingsTab" class="active" onclick="selectTab('settings')">settings</button>
     </div>
     <div class="content">
-      <div id="info" class="active">
-        info
+      <div id="info">
+        soon<sup>tm</sup>
       </div>
-      <div id="settings">
+      <div id="settings" class="active">
         <label for="region-depth">region depth:</label>
         <input type="number" name="regionDepth" value="2" id="region-depth" onchange="editor.regionDepth = this.value">
         <label for="num-lines">number of lines:</label>
@@ -107,8 +104,6 @@
         <input type="number" name="bytesPerGroup" value="4" id="bytes-per-group" onchange="editor.bytesPerGroup = this.value">
         <label for="ascii-inline">ascii inline:</label>
         <input type="checkbox" name="asciiInline" id="ascii-inline" onchange="editor.asciiInline = this.checked">
-
-
       </div>
     </div>
   </div>
