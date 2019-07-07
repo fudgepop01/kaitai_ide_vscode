@@ -269,10 +269,27 @@
 
       })
 
-      window.addEventListener('message', ({ data }) => {
+      let editorIsLoaded = false;
+      const awaitLoaded = () => {
+        return new Promise((resolve) => {
+          editor.addEventListener("hexLoaded", async () => {
+            editorIsLoaded = true;
+            resolve();
+          })
+        })
+      }
+
+      editor.addEventListener("hexLoaded", async () => {
+        editorIsLoaded = true;
+      })
+
+
+      window.addEventListener('message', async ({ data }) => {
         switch (data.command) {
           case 'openFile':
             const f = data.file;
+            console.log(data);
+            if (!editorIsLoaded) await awaitLoaded();
             editor.acceptFile(new File([Uint8Array.from(atob(f.bits), c => c.charCodeAt(0))], f.name));
             break;
           case 'updateRegions':

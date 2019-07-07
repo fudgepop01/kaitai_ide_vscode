@@ -6,14 +6,12 @@ import * as KaitaiCompiler from 'kaitai-struct-compiler';
 import { safeLoad as safeLoadYaml } from 'js-yaml';
 
 import { join as joinPath } from 'path';
-import { readFileSync, writeFileSync } from 'fs';
+import { readFileSync, writeFileSync, read } from 'fs';
 
 import { analyzeStructure } from './util/regionAnalysis';
 import { KSExplorer } from './KSExplorerController';
 import supportedLangs from './util/supportedLangs';
 import { inspect } from 'util';
-
-
 
 interface ISequence {
   start: number;
@@ -25,6 +23,7 @@ interface ISequence {
 const namespace = "kaitaiStruct";
 
 const eager = true;
+const debugMode = true;
 
 export default class editor implements vscode.Disposable {
   public currentFile: Buffer;
@@ -156,9 +155,15 @@ export default class editor implements vscode.Disposable {
       this.onOpenHexEditor();
       if (!this.panel.visible) this.panel.reveal();
     }
+
+    if (debugMode) console.log(`node exists if the following is not undefined: ${readFileSync}`);
+
     const fileBuffer = readFileSync(args.fsPath);
     this.currentFile = fileBuffer;
     const payload = fileBuffer.toString('base64');
+
+    if (debugMode) console.log(`payload: ${payload.constructor.name} - length: ${payload.length}`)
+
     this.panel.webview.postMessage({
       command: 'openFile',
       file: {

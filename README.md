@@ -159,9 +159,14 @@ Calling out known issues can help limit users opening duplicate issues against y
 
 ## Release Notes
 
-### 0.2.0
+### 0.2.2
 
-Added the ability to import other ksy files
+* opening file as hex without hex editor already open will now properly wait for the editor to load
+
+### 0.2.1
+
+* Added the ability to import other ksy files
+* implemented a very basic info panel
 
 ### 0.1.0
 
