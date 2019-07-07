@@ -32,6 +32,7 @@ export default class editor implements vscode.Disposable {
   public compiledKsy: string;
   public panel: vscode.WebviewPanel;
   public tree: KSExplorer;
+  public loadedPaths: string[] = [];
 
   public context: vscode.ExtensionContext;
   public commands: vscode.Disposable[] = [];
@@ -41,7 +42,7 @@ export default class editor implements vscode.Disposable {
     // registering commands
     const registerCommand = vscode.commands.registerCommand;
     this.commands.push(...[
-      registerCommand(`${namespace}.openHexEditor`, this.onOpenHexEditor.bind(this)),
+      registerCommand(`${namespace}.openHexEditor`, () => this.onOpenHexEditor()),
       registerCommand(`${namespace}.openFileAsHex`, this.onOpenFileAsHex.bind(this)),
       registerCommand(`${namespace}.compileAndExamine`, this.onCompileAndExamine.bind(this)),
       registerCommand(`${namespace}.jumpToChunk`, (start, end) => this.onJumpToChunk(start, end - 1)),
@@ -62,6 +63,29 @@ export default class editor implements vscode.Disposable {
     // console.log(tree);
     this.setRegions(regions);
 
+  }
+
+  private doFullLoad(path: string) {
+    const rawKsy = readFileSync(path, 'utf8');
+    const parsedYaml = safeLoadYaml(rawKsy);
+
+    if (parsedYaml.meta.imports) {
+      if (!parsedYaml.types) parsedYaml.types = {};
+
+      for (const rawPath of parsedYaml.meta.imports as string[]) {
+        const importPath = joinPath(path.substring(0, path.lastIndexOf('/')), ...(rawPath + '.ksy').split("/")).normalize();
+        if (this.loadedPaths.includes(importPath)) continue;
+        else this.loadedPaths.push(importPath);
+
+        let toAppend = this.doFullLoad(importPath);
+
+        parsedYaml.types[toAppend.meta.id] = toAppend;
+      }
+
+      delete parsedYaml.meta.imports;
+    }
+
+    return parsedYaml;
   }
 
   // -------------------------------------------
@@ -108,7 +132,7 @@ export default class editor implements vscode.Disposable {
       }
     );
 
-    const rawhtml = readFileSync(joinPath(this.context.extensionPath, 'src', 'webview.html'), 'utf8');
+    const rawhtml = readFileSync(vscode.Uri.file(joinPath(this.context.extensionPath, 'webviews', 'webview.html')).fsPath, 'utf8');
     panel.webview.html = rawhtml.replace(/{{EXTPATH}}/g, this.context.extensionPath);
     panel.onDidDispose(() => {
       this.panel = null;
@@ -177,8 +201,9 @@ export default class editor implements vscode.Disposable {
   private async onCompileAndExamine(args: vscode.Uri) {
     if (!args.fsPath.endsWith(".ksy")) throw new Error("the specified file is not a ksy file");
 
-    const rawKsy = readFileSync(args.fsPath, 'utf8');
-    const parsed = safeLoadYaml(rawKsy);
+    this.loadedPaths = [];
+    const parsed = this.doFullLoad(args.fsPath);
+
     const compiler = new KaitaiCompiler();
     const debug = true;
 

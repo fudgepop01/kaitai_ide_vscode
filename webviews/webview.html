@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
 
-  <script src="https://unpkg.com/fudgedit@0.1.3/dist/fudgeapps.js"></script>
+  <script src="https://unpkg.com/fudgedit@0.2.0/dist/fudgeapps.js"></script>
   <title>Kaitai Struct IDE</title>
   <style>
     body {
@@ -80,6 +80,38 @@
     #settings > *:nth-child(2n) {
       justify-self: left;
     }
+
+    table {
+      font-family: 'Sourcecode Pro', Courier, monospace;
+      table-layout: fixed;
+      border-collapse: collapse;
+    }
+
+    thead {
+      background-color: black;
+      color: white;
+    }
+    thead th:nth-child(1) { width: 50px; }
+    thead th:nth-child(2) { width: 50px; }
+    thead th:nth-child(3) { width: 100px; }
+    thead th:nth-child(4) { width: 100px; }
+
+    th, td {
+      padding: 2px 5px;
+    }
+
+    tr:nth-child(2n) {
+      background-color: #EEE;
+    }
+
+    tr td:not([rowspan]) {
+      text-align: right;
+    }
+
+    tr:nth-child(6),
+    tr:nth-child(4) td:first-child {
+      border-bottom: 1px solid black;
+    }
   </style>
 </head>
 <body style="width: 100%; height: 100%; background-color: white;">
@@ -91,7 +123,77 @@
     </div>
     <div class="content">
       <div id="info">
-        soon<sup>tm</sup>
+        <table>
+          <thead>
+            <tr>
+              <th>endian</th>
+              <th>size</th>
+              <th>unsigned</th>
+              <th>signed</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td rowspan="3">big</td>
+              <td>1 (08)</td>
+              <td id="u1be">---</td>
+              <td id="s1be">---</td>
+            </tr>
+            <tr>
+              <td>2 (16)</td>
+              <td id="u2be">---</td>
+              <td id="s2be">---</td>
+            </tr>
+            <tr>
+              <td>4 (32)</td>
+              <td id="u4be">---</td>
+              <td id="s4be">---</td>
+            </tr>
+            <!-- <tr>
+              <td>8 (64)</td>
+              <td id="u8be">N/A</td>
+              <td id="s8be">N/A</td>
+            </tr> -->
+
+            <tr>
+              <td rowspan="3">little</td>
+              <td>1 (08)</td>
+              <td id="u1le">---</td>
+              <td id="s1le">---</td>
+            </tr>
+            <tr>
+              <td>2 (16)</td>
+              <td id="u2le">---</td>
+              <td id="s2le">---</td>
+            </tr>
+            <tr>
+              <td>4 (32)</td>
+              <td id="u4le">---</td>
+              <td id="s4le">---</td>
+            </tr>
+            <!-- <tr>
+              <td>8 (64)</td>
+              <td id="u8le">N/A</td>
+              <td id="s8le">N/A</td>
+            </tr> -->
+            <tr>
+              <td colspan="2">ASCII</td>
+              <td colspan="2" id="ASCII">---</td>
+            </tr>
+            <!-- <tr>
+              <td colspan="2">UTF8</td>
+              <td colspan="2" id="UTF8">---</td>
+            </tr>
+            <tr>
+              <td colspan="2">UTF16be</td>
+              <td colspan="2" id="UTF16be">---</td>
+            </tr>
+            <tr>
+              <td colspan="2">UTF16le</td>
+              <td colspan="2" id="UTF16le">---</td>
+            </tr> -->
+          </tbody>
+        </table>
       </div>
       <div id="settings" class="active">
         <label for="region-depth">region depth:</label>
@@ -131,13 +233,40 @@
     // VSCode interaction
     (function() {
       const vscode = acquireVsCodeApi();
+      let cursor = 0;
 
       const editor = document.getElementById("editor");
-      editor.addEventListener("hexCursorChanged", (newCursorPosition) => {
+      editor.addEventListener("hexCursorChanged", async (newCursorPosition) => {
         vscode.postMessage({
           event: 'hexCursorChanged',
-          args: newCursorPosition
+          args: newCursorPosition.detail + 1
         })
+
+        cursor = newCursorPosition.detail;
+
+        const infoBuffer = (await editor.getChunk(cursor, 32)).out;
+        let infoView = new DataView(infoBuffer.buffer);
+        let isNeg;
+
+        document.getElementById("ASCII").innerText = new TextDecoder("ascii").decode(infoBuffer.buffer);
+
+        document.getElementById("u1be").innerText = infoView.getUint8(0);
+        document.getElementById("u2be").innerText = infoView.getUint16(0);
+        document.getElementById("u4be").innerText = infoView.getUint32(0);
+
+        document.getElementById("s1be").innerText = infoView.getInt8(0);
+        document.getElementById("s2be").innerText = infoView.getInt16(0);
+        document.getElementById("s4be").innerText = infoView.getInt32(0);
+
+        infoView = new DataView(infoBuffer.subarray(0, 8).reverse().buffer);
+        document.getElementById("u1le").innerText = infoView.getUint8(7);
+        document.getElementById("u2le").innerText = infoView.getUint16(6);
+        document.getElementById("u4le").innerText = infoView.getUint32(3);
+
+        document.getElementById("s1le").innerText = infoView.getInt8(7);
+        document.getElementById("s2le").innerText = infoView.getInt16(6);
+        document.getElementById("s4le").innerText = infoView.getInt32(3);
+
       })
 
       window.addEventListener('message', ({ data }) => {
@@ -156,6 +285,7 @@
               end: data.end
             })
             editor.setCursorPosition(data.start);
+            cursor = data.start;
             editor.setLineNumber(Math.floor(data.start / 16))
         }
       })

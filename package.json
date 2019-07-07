@@ -2,7 +2,10 @@
     "name": "kaitai-struct-vscode",
     "displayName": "kaitai struct vscode",
     "description": "An extension aimed at adding the full power of kaitai struct to visual studio code",
-    "version": "0.0.1",
+    "repository": {
+        "url": "https://github.com/fudgepop01/fudgedit"
+    },
+    "version": "0.1.12",
     "publisher": "fudgepops",
     "engines": {
         "vscode": "^1.35.0"
@@ -12,9 +15,7 @@
     ],
     "activationEvents": [
         "onView:kaitaiStructExplorer",
-        "onCommand:kaitaiStruct.openHexEditor",
-        "onCommand:kaitaiStruct.openFileAsHex",
-        "onCommand:kaitaiStruct.compileAndExamine"
+        "onCommand:kaitaiStruct.openHexEditor"
     ],
     "main": "./out/extension",
     "contributes": {

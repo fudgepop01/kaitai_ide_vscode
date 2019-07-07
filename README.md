@@ -4,6 +4,8 @@ This is an extension built by Dominick Reba (@fudgepop01) that allows for relati
 of ksy files. To find out more about Kaitai Struct and what it can do,
 head here: [[kaitai.io](https://kaitai.io/)]
 
+If you want to see an overview of what this extension can do, check out [[the overview video here](https://www.youtube.com/watch?v=4c7UuZ33JYE)]
+
 this is the first extension to utilize the [[fudgedit](https://fudgepop01.github.io/)] hex editor. An extension
 exposing the editor itself will be released at a later date if requested.
 
@@ -141,12 +143,12 @@ Calling out known issues can help limit users opening duplicate issues against y
   * [x] render sequences properly
 * [x] tree view
 * [ ] intuitive webview GUI
-  * [ ] region depth adjustment (_technically_ speaking this is implemented)
+  * [x] region depth adjustment
   * [ ] property adjustment
-    * [ ] line width
-    * [ ] number of lines
-    * [ ] group size
-    * [ ] inline ASCII toggle
+    * [x] line width
+    * [x] number of lines
+    * [x] group size
+    * [x] inline ASCII toggle
     * [ ] editor mode toggle
   * [ ] selected byte value viewer
 * [ ] optimization / usability
@@ -157,16 +159,10 @@ Calling out known issues can help limit users opening duplicate issues against y
 
 ## Release Notes
 
-Users appreciate release notes as you update your extension.
+### 0.2.0
 
-### 1.0.0
+Added the ability to import other ksy files
 
-Initial release of ...
+### 0.1.0
 
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
+First beta release, hurrah!
