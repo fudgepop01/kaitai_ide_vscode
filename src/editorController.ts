@@ -165,8 +165,9 @@ export default class editor implements vscode.Disposable {
   private async onCompileToTarget(args: vscode.Uri) {
     if (!args.fsPath.endsWith(".ksy")) throw new Error("the specified file is not a ksy file");
 
-    const rawKsy = readFileSync(args.fsPath, 'utf8');
-    const parsed = safeLoadYaml(rawKsy);
+    this.loadedPaths = [];
+    const parsed = this.doFullLoad(args.fsPath);
+
     const compiler = new KaitaiCompiler();
 
     vscode.window.showInformationMessage('choose a language');

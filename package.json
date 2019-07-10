@@ -5,7 +5,7 @@
     "repository": {
         "url": "https://github.com/fudgepop01/fudgedit"
     },
-    "version": "0.3.0",
+    "version": "0.3.1",
     "publisher": "fudgepops",
     "engines": {
         "vscode": "^1.35.0"
@@ -57,10 +57,12 @@
             ]
         },
         "views": {
-            "explorer": [{
-                "id": "kaitaiStructExplorer",
-                "name": "KSExplorer"
-            }]
+            "explorer": [
+                {
+                    "id": "kaitaiStructExplorer",
+                    "name": "KSExplorer"
+                }
+            ]
         }
     },
     "scripts": {

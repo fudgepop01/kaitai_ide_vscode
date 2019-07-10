@@ -159,6 +159,10 @@ Calling out known issues can help limit users opening duplicate issues against y
 
 ## Release Notes
 
+### 0.3.1
+
+* fixed oversight preventing imports from being handled properly when compiling to a target language
+
 ### 0.3.0
 
 * arrays of primitives now behave like arrays instead of displaying the contents in one line

@@ -19,7 +19,7 @@ export class KSTreeDataProvider implements vscode.TreeDataProvider<KSNode> {
     if (!element) return this.data;
     if (element.subRegions && Array.isArray(element.subRegions[0])) {
       return (element.subRegions as any[]).map((val: any, index: number) => {
-        let arrlen = element.subRegions[index as unknown as string].length;
+        let arrlen = element.subRegions[index as any as string].length;
         return {
           name: '' + index,
           type: element.type,
