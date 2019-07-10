@@ -150,7 +150,7 @@ Calling out known issues can help limit users opening duplicate issues against y
     * [x] group size
     * [x] inline ASCII toggle
     * [ ] editor mode toggle
-  * [ ] selected byte value viewer
+  * [x] selected byte value viewer
 * [ ] optimization / usability
   * [x] use base64 to transfer data to/from webview
   * [ ] a scrollbar
@@ -158,6 +158,10 @@ Calling out known issues can help limit users opening duplicate issues against y
   * [ ] edit / save opened files directly via fudgedit
 
 ## Release Notes
+
+### 0.3.0
+
+* arrays of primitives now behave like arrays instead of displaying the contents in one line
 
 ### 0.2.2
 

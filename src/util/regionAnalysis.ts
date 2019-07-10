@@ -36,7 +36,19 @@ const mergeData = (debugData: any, mainData: any, dataName: string) => {
 
     if (typeof mainData[0] !== "object" || mainData[0] instanceof Uint8Array) {
       // array consists of primitives
-      out.content = mainData;
+
+      let size = debugData.end - debugData.start;
+      let offsetTracker = (size / mainData.length);
+      out.subRegions = (mainData as any[]).map((val: any, index: number) => {
+        return {
+          name: '' + index,
+          type: mainData.constructor.name,
+          start: (debugData.start + debugData.ioOffset) + offsetTracker * index,
+          end: (debugData.start + debugData.ioOffset) + offsetTracker * (index + 1),
+          content: val
+        }
+      });
+      out.strippedSubRegions = out.subRegions;
     } else {
       // array consists of more structures
       out.subRegions = [];
