@@ -2,10 +2,11 @@
 
 import * as vscode from 'vscode';
 import * as KaitaiStream from 'kaitai-struct/KaitaiStream';
-import * as KaitaiCompiler from 'kaitai-struct-compiler';
+import * as KaitaiCompiler from './compiler/kaitai-struct-compiler.js';
 import { safeLoad as safeLoadYaml } from 'js-yaml';
 
 import { join as joinPath } from 'path';
+import { platform } from 'os';
 import { readFileSync, writeFileSync, read } from 'fs';
 
 import { analyzeStructure } from './util/regionAnalysis';
@@ -61,7 +62,10 @@ export default class editor implements vscode.Disposable {
       if (!parsedYaml.types) parsedYaml.types = {};
 
       for (const rawPath of parsedYaml.meta.imports as string[]) {
-        const importPath = joinPath(path.substring(0, path.lastIndexOf('/')), ...(rawPath + '.ksy').split("/")).normalize();
+
+        const importPath = (platform() === "win32") ?
+          joinPath(path.substring(0, path.lastIndexOf('\\')), ...(rawPath + '.ksy').split("/")).normalize():
+          joinPath(path.substring(0, path.lastIndexOf('/')), ...(rawPath + '.ksy').split("/")).normalize();
         if (this.loadedPaths.includes(importPath)) continue;
         else this.loadedPaths.push(importPath);
 
@@ -168,7 +172,7 @@ export default class editor implements vscode.Disposable {
     this.loadedPaths = [];
     const parsed = this.doFullLoad(args.fsPath);
 
-    const compiler = new KaitaiCompiler();
+    const compiler = (new KaitaiCompiler.default())();
 
     vscode.window.showInformationMessage('choose a language');
     const language = await vscode.window.showQuickPick(supportedLangs, {
@@ -189,7 +193,12 @@ export default class editor implements vscode.Disposable {
     }
 
     for (const [name, content] of Object.entries(compiled)){
-      writeFileSync(args.path.substring(0, args.fsPath.lastIndexOf('/') + 1) + name, content, 'utf8');
+      let thing = platform();
+      if (platform() === 'win32') {
+        writeFileSync(args.fsPath.substring(0, args.fsPath.lastIndexOf('\\') + 1) + name, content, 'utf8');
+      } else {
+        writeFileSync(args.path.substring(0, args.fsPath.replace(/\\/g, '/').lastIndexOf('/') + 1) + name, content, 'utf8');
+      }
     }
   }
 
@@ -199,7 +208,7 @@ export default class editor implements vscode.Disposable {
     this.loadedPaths = [];
     const parsed = this.doFullLoad(args.fsPath);
 
-    const compiler = new KaitaiCompiler();
+    const compiler = (new KaitaiCompiler.default())();
     const debug = true;
 
     const compiled = await compiler.compile('javascript', parsed, null, debug);

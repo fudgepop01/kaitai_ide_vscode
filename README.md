@@ -22,7 +22,7 @@ exposing the editor itself will be released at a later date if requested.
 9. enjoy your visualization
 
 > **Note**: currently the compiler only operates in "eager" mode. This will be updated to include
-> a lazy mode in a future release.  
+> a lazy mode in a future release.
 > **Avoid processing extremely large/complex files or else vscode may become unresponsive.**
 
 To generate a new parser from a ksy file in a target language, right click on a
@@ -47,7 +47,7 @@ The `files.associations` part will allow vscode to automaticaly open `ksy` files
 The `yaml.schemas` part will give schema support to all `ksy` files, allowing for features
 such as autocompletion and validation.
 
-> **note**: there are still a few bugs in the schema to work out.  
+> **note**: there are still a few bugs in the schema to work out.
 > Notably, enum/switch-on may give a false error expecting an object
 > and there is no duplicate key checking.
 
@@ -56,7 +56,7 @@ such as autocompletion and validation.
 ### regions: highlighting with depth
 
 A _region_ is the name I've given to the different chunks of a file.
-_Depth_ refers to how many layers are traversed and visualized in the hex viewer.  
+_Depth_ refers to how many layers are traversed and visualized in the hex viewer.
 Take the following example ksy:
 
 ```yaml
@@ -158,6 +158,11 @@ Calling out known issues can help limit users opening duplicate issues against y
   * [ ] edit / save opened files directly via fudgedit
 
 ## Release Notes
+
+### 0.4.0
+
+* actually made it work on windows (sorry about that)
+* updated to the latest version of Kaitai Struct (0.8 ==> 0.9)
 
 ### 0.3.1
 
