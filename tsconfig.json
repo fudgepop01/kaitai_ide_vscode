@@ -7,10 +7,11 @@
             "es2017"
         ],
         "sourceMap": true,
-        "experimentalDecorators": true
+        "experimentalDecorators": true,
+        "noImplicitAny": false
     },
     "include": [
-        "src/extension.ts"
+        "src/**/*"
     ],
     "exclude": [
         "node_modules",

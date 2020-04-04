@@ -7,9 +7,9 @@ import { safeLoad as safeLoadYaml } from 'js-yaml';
 
 import { join as joinPath } from 'path';
 import { platform } from 'os';
-import { readFileSync, writeFileSync, read } from 'fs';
+import { readFileSync, writeFileSync } from 'fs';
 
-import { analyzeStructure } from './util/regionAnalysis';
+import { analyzeStructure, opts } from './util/regionAnalysis';
 import { KSExplorer } from './KSExplorerController';
 import supportedLangs from './util/supportedLangs';
 
@@ -37,6 +37,8 @@ export default class editor implements vscode.Disposable {
       registerCommand(`${namespace}.jumpToChunk`, (start, end) => this.onJumpToChunk(start, end - 1)),
       registerCommand(`${namespace}.compileKsy`, (Uri) => this.onCompileToTarget(Uri))
     ]);
+
+    opts.callback = (regions) => this.setRegions(regions);
   }
 
   // -------------------------------------------
@@ -44,9 +46,14 @@ export default class editor implements vscode.Disposable {
   // -------------------------------------------
   private generateRegions(ksyOutput: any) {
     console.log(ksyOutput);
+    try {
+      analyzeStructure(ksyOutput);
+    } catch(e) {
+      console.error(e)
+    }
     const analyzed = analyzeStructure(ksyOutput)
     const regions = analyzed.regionData;
-    // console.log(analyzed.fullData);
+    console.log(analyzed.fullData);
     const tree = new KSExplorer(this.context, analyzed.fullData);
     this.tree = tree;
     // console.log(tree);
@@ -84,6 +91,7 @@ export default class editor implements vscode.Disposable {
   //  Post Message to Webview
   // -------------------------------------------
   private setRegions(regionData: any) {
+    opts.currentRegions = regionData;
     const regionB64 = Buffer.from(JSON.stringify(regionData)).toString("base64");
     this.panel.webview.postMessage({
       command: 'updateRegions',
@@ -104,6 +112,10 @@ export default class editor implements vscode.Disposable {
   // -------------------------------------------
   private handleHexCursorChanged(cursor: number) {
     console.log("cursor changed: " + cursor);
+  }
+
+  private handleUpdateCompilationMode(newEager: boolean) {
+    opts.eager = newEager;
   }
 
   // -------------------------------------------
@@ -139,6 +151,7 @@ export default class editor implements vscode.Disposable {
     this.panel.webview.onDidReceiveMessage((message: {event: string, args: any}) => {
       switch(message.event) {
         case 'hexCursorChanged': this.handleHexCursorChanged(message.args); break;
+        case 'updateCompilationMode': this.handleUpdateCompilationMode(message.args); break;
       }
     })
   }
@@ -172,7 +185,7 @@ export default class editor implements vscode.Disposable {
     this.loadedPaths = [];
     const parsed = this.doFullLoad(args.fsPath);
 
-    const compiler = (new KaitaiCompiler.default())();
+    const compiler = new KaitaiCompiler();
 
     vscode.window.showInformationMessage('choose a language');
     const language = await vscode.window.showQuickPick(supportedLangs, {
@@ -208,11 +221,16 @@ export default class editor implements vscode.Disposable {
     this.loadedPaths = [];
     const parsed = this.doFullLoad(args.fsPath);
 
-    const compiler = (new KaitaiCompiler.default())();
+    const compiler = new KaitaiCompiler();
     const debug = true;
 
-    const compiled = await compiler.compile('javascript', parsed, null, debug);
-
+    let compiled;
+    try {
+      compiled = await compiler.compile('javascript', parsed, null, debug);
+    } catch(e) {
+      console.error(e);
+      vscode.window.showErrorMessage(`${e.s$1}: ${e.e$1.s$1} \ntrace:\n${e.stackTrace$1}`);
+    }
 
 
     const fileName = Object.keys(compiled)[0];
@@ -230,7 +248,11 @@ export default class editor implements vscode.Disposable {
     `);
 
     const out = new (parseFunction(KaitaiStream))(new KaitaiStream(this.currentFile, 0));
-    await out._root._read();
+    try {
+      await out._root._read();
+    } catch(e) {
+      console.log(e);
+    }
 
     this.generateRegions(out);
   }

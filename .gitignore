@@ -4,3 +4,6 @@ node_modules
 .vsix
 .DS_Store
 kaitai_struct_compiler
+dist
+
+kaitai-struct-vscode-*.vsix

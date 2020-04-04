@@ -1,6 +1,10 @@
 import { nestedGetter } from './nestedPropertyMethods';
 
-const eager = true;
+export const opts = {
+  eager: false,
+  callback: (_: any) => {},
+  currentRegions: {} as any
+};
 
 interface ISimple {
   start: number;
@@ -10,7 +14,14 @@ interface ISimple {
   subRegions?: any;
 }
 
-const mergeData = (debugData: any, mainData: any, dataName: string) => {
+interface ICircleCheck {
+  start: number;
+  type: string;
+  name: string;
+  regionPath: string;
+}
+
+const mergeData = (debugData: any, mainData: any, dataName: string, parents: ICircleCheck[], regionNum: number | string) => {
 
   let out = {
     start: debugData.start + debugData.ioOffset,
@@ -23,6 +34,22 @@ const mergeData = (debugData: any, mainData: any, dataName: string) => {
     strippedSubRegions: null,
     content: null
   };
+
+  // prevents circular references on initial compile (important for eager mode)
+  let existingIndex = parents.map(({start, type}) => JSON.stringify({start, type})).indexOf(JSON.stringify({start: out.start, type: out.type}));
+  if (existingIndex != -1) {
+    // return from circular here
+    return {
+      ...out,
+      type: '[circular] - ' + parents.slice(0, existingIndex + 1).map(({name}) => name).join('/')
+    }
+  } else {
+    // sets subregion path here
+    let lastRegionPath = '';
+    if (parents.length != 0) lastRegionPath = parents[parents.length - 1].regionPath + ',';
+    parents.push({start: out.start, type: out.type, name: out.name, regionPath: `${lastRegionPath}${regionNum}`});
+  }
+
 
   if (typeof mainData !== "object" || mainData instanceof Uint8Array) {
     // contents are a primitive type
@@ -54,7 +81,7 @@ const mergeData = (debugData: any, mainData: any, dataName: string) => {
       out.subRegions = [];
       out.strippedSubRegions = [];
       for (const entry of mainData) {
-        let data = analyzeStructure(entry);
+        let data = analyzeStructure(entry, parents);
 
         out.subRegions.push(data.fullData);
         out.strippedSubRegions.push(...data.regionData);
@@ -63,17 +90,18 @@ const mergeData = (debugData: any, mainData: any, dataName: string) => {
   }
   else  {
     // we're dealing with another object
-    const data = analyzeStructure(mainData);
+    const data = analyzeStructure(mainData, parents);
     out.subRegions = data.fullData;
     out.strippedSubRegions = data.regionData;
   }
 
+  parents.pop()
   return out;
 }
 
+export const analyzeStructure = (input: any, parents?: ICircleCheck[]) => {
+  if (!parents) parents = [];
 
-
-export const analyzeStructure = (input: any) => {
   const regionData = [];
   const fullData = [];
 
@@ -84,7 +112,8 @@ export const analyzeStructure = (input: any) => {
     if (isInstance) debugInf = input._debug[`_m_${key}`];
     else debugInf = input._debug[key];
 
-    const merged = mergeData(debugInf, mainData, key);
+    if (mainData == undefined || key.startsWith('_m_')) return;
+    const merged = mergeData(debugInf, mainData, key, parents, regionData.length);
 
     const simple: ISimple = {
       start: merged.start,
@@ -112,20 +141,80 @@ export const analyzeStructure = (input: any) => {
 
   // find / get instances
   for (const key of Reflect.ownKeys(input.__proto__).map(k => k.toString())) {
-    if (["constructor", "_read"].includes(key)) continue;
-    if (eager) {
+    if (["constructor", "_read"].includes(key) || key.startsWith('_m_')) continue;
+    if (opts.eager) {
       dataRoutine(key, true);
     }
     else {
-      fullData.push({
-        type: "__instance",
-        name: key
-      })
+      // enables the continuation of parsing on command
+      let toPush = {
+        type: "[instance]",
+        name: key,
+        analysisLeaf: null,
+        regionPath:
+          (parents.length > 0)
+          ? `${parents[parents.length - 1].regionPath},${regionData.length}`
+          : `${regionData.length}`
+      }
+      // the callback is necessary to update the region data
+      toPush.analysisLeaf = new analysisLeaf(toPush, input, opts.callback);
+      regionData.push({start: NaN, end: NaN, name: '', content: ''});
+      fullData.push(toPush);
     }
   }
 
   return {
     regionData,
     fullData
+  }
+}
+
+export class analysisLeaf {
+  constructor(
+    private elementData,
+    private parent,
+    private callback
+  ) {}
+
+  run() {
+    let debugInf: any;
+    let input = this.parent;
+    let key = this.elementData.name;
+    let regions = opts.currentRegions;
+
+    const mainData = input[key];
+    debugInf = input._debug[`_m_${key}`];
+
+    if (mainData == undefined) return;
+    const merged = mergeData(debugInf, mainData, key, [], this.elementData.regionPath);
+
+    const simple: ISimple = {
+      start: merged.start,
+      end: merged.end,
+      name: merged.name,
+      content: merged.content
+    };
+
+    if (merged.strippedSubRegions) {
+      simple.subRegions = merged.strippedSubRegions;
+      delete merged.strippedSubRegions;
+    }
+
+    let r = regions;
+    let rp = this.elementData.regionPath.split(",");
+    for (let i = 0; i < rp.length - 1; i++) {
+      r = r[parseInt(rp[i])]
+      if (r.subRegions) r = r.subRegions;
+      else {
+        console.error("somehow didn't do regions right...")
+        console.log(r);
+        return merged;
+      }
+    }
+
+    r[parseInt(rp.pop())] = simple;
+    opts.callback(regions);
+
+    return merged;
   }
 }

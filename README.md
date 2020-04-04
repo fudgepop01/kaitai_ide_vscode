@@ -159,6 +159,14 @@ Calling out known issues can help limit users opening duplicate issues against y
 
 ## Release Notes
 
+### 0.5.1
+
+* fixed bug involving optional fields/instances that have an `if` attribute that returns `false`
+
+### 0.5.0
+
+* updated kaitai struct so that nested types with parameters work properly (ex. `my_type::my_nested_type_with_parameter(2)`)
+
 ### 0.4.0
 
 * actually made it work on windows (sorry about that)

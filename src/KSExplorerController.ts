@@ -1,12 +1,14 @@
 import * as vscode from 'vscode';
-import { inspect } from 'util';
+import { analysisLeaf } from './util/regionAnalysis';
 
 export interface KSNode {
   start: number;
   end: number;
   name: string;
   array: boolean;
-  type: string | "__instance";
+  type: string | "[instance]";
+  analysisLeaf?: analysisLeaf;
+  regionIndex?: number;
   content?: string | number | Uint8Array | string[] | number[] | Uint8Array[];
   subRegions?: KSNode[] | KSNode[][];
 }
@@ -17,6 +19,9 @@ export class KSTreeDataProvider implements vscode.TreeDataProvider<KSNode> {
 
   public getChildren(element: KSNode): KSNode[] | any {
     if (!element) return this.data;
+    if (element.type === '[instance]') {
+      return [element.analysisLeaf.run()];
+    }
     if (element.subRegions && Array.isArray(element.subRegions[0])) {
       return (element.subRegions as any[]).map((val: any, index: number) => {
         let arrlen = element.subRegions[index as any as string].length;
@@ -53,9 +58,12 @@ export class KSTreeDataProvider implements vscode.TreeDataProvider<KSNode> {
     }
 
     return {
-      tooltip: JSON.stringify({...element, subRegions: "___", content: (!(content instanceof Uint8Array)) ? content : '<Binary Data>' }, null, 2),
+      tooltip: JSON.stringify({...element, analysisLeaf: null, subRegions: "___", content: (!(content instanceof Uint8Array)) ? content : '<Binary Data>' }, null, 2),
       label: `${name}: ${typeLabel}${arrayLabel}`,
-      collapsibleState: (element.subRegions || Array.isArray(element.content)) ? vscode.TreeItemCollapsibleState.Collapsed : void 0,
+      collapsibleState:
+        (element.subRegions || Array.isArray(element.content) || element.type === '[instance]')
+        ? vscode.TreeItemCollapsibleState.Collapsed
+        : void 0,
       command: (element.start == undefined) ? void 0 : {
         command: "kaitaiStruct.jumpToChunk",
         arguments: [element.start, element.end],

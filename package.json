@@ -5,19 +5,21 @@
     "repository": {
         "url": "https://github.com/fudgepop01/kaitai_ide_vscode"
     },
-    "version": "0.4.0",
+    "version": "0.6.0",
     "publisher": "fudgepops",
     "engines": {
         "vscode": "^1.35.0"
     },
     "categories": [
-        "Other"
+        "Other",
+        "Debuggers",
+        "Programming Languages"
     ],
     "activationEvents": [
         "onView:kaitaiStructExplorer",
         "onCommand:kaitaiStruct.openHexEditor"
     ],
-    "main": "./out/extension",
+    "main": "./dist/extension",
     "contributes": {
         "commands": [
             {
@@ -67,8 +69,8 @@
     },
     "scripts": {
         "vscode:prepublish": "npm run compile",
-        "compile": "tsc -p ./",
-        "watch": "tsc -watch -p ./",
+        "compile": "webpack",
+        "watch": "",
         "postinstall": "node ./node_modules/vscode/bin/install",
         "test": "npm run compile && node ./node_modules/vscode/bin/test"
     },
@@ -76,11 +78,15 @@
         "@types/js-yaml": "^3.12.3",
         "@types/mocha": "^2.2.42",
         "@types/node": "^7.10.9",
+        "ts-loader": "^6.2.2",
         "typescript": "^2.6.1",
-        "vscode": "^1.1.36"
+        "vscode": "^1.1.36",
+        "webpack": "^4.42.1",
+        "webpack-cli": "^3.3.11"
     },
     "dependencies": {
         "fudgedit": "0.0.1",
+        "iconv-lite": "^0.5.1",
         "js-yaml": "^3.13.1",
         "kaitai-struct": "^0.8.0-SNAPSHOT.11",
         "safer-eval": "^1.3.6"
