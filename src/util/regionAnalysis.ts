@@ -143,6 +143,7 @@ export const analyzeStructure = (input: any, parents?: ICircleCheck[]) => {
   for (const key of Reflect.ownKeys(input.__proto__).map(k => k.toString())) {
     if (["constructor", "_read"].includes(key) || key.startsWith('_m_')) continue;
     if (opts.eager) {
+      if (input[key] == undefined) continue;
       if (input.constructor.name !== input[key].constructor.name) dataRoutine(key, true);
       else {
         // prevents indefinitely recursive types from parsing infinitely (ex. linked lists)

@@ -159,10 +159,14 @@ Calling out known issues can help limit users opening duplicate issues against y
 
 ## Release Notes
 
+### 0.6.3
+
+* fixed bug concerning instances with `if` conditions
+
 ### 0.6.2
 
 * added support for recursive instances
-  * when a recursive instnace is detected, it will switch to lazy parsing mode and mark the instance with `[rec]`
+  * when a recursive instnace is detected, it will switch to lazy mode and mark the instance with `[rec]`
 
 ### 0.6.1
 
