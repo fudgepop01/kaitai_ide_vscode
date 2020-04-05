@@ -5,7 +5,7 @@
     "repository": {
         "url": "https://github.com/fudgepop01/kaitai_ide_vscode"
     },
-    "version": "0.6.3",
+    "version": "0.6.4",
     "publisher": "fudgepops",
     "engines": {
         "vscode": "^1.35.0"

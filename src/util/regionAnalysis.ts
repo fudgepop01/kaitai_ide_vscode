@@ -36,11 +36,14 @@ const mergeData = (debugData: any, mainData: any, dataName: string, parents: ICi
   };
 
   // prevents circular references on initial compile (important for eager mode)
+  // also allows for keeping track of the index of an array entry
   let existingIndex = parents.map(({start, type}) => JSON.stringify({start, type})).indexOf(JSON.stringify({start: out.start, type: out.type}));
-  if (existingIndex != -1) {
+  if (existingIndex != -1 ) {
     // return from circular here
     return {
       ...out,
+      start: NaN,
+      end: NaN,
       type: '[circular] - ' + parents.slice(0, existingIndex + 1).map(({name}) => name).join('/')
     }
   } else {
@@ -80,8 +83,13 @@ const mergeData = (debugData: any, mainData: any, dataName: string, parents: ICi
       // array consists of more structures
       out.subRegions = [];
       out.strippedSubRegions = [];
-      for (const entry of mainData) {
+
+      let lastRegionPath = '';
+      if (parents.length != 0) lastRegionPath = parents[parents.length - 1].regionPath + ',';
+      for (const [idx, entry] of mainData.entries()) {
+        parents.push({name: `${idx}`, type: entry.constructor.name, regionPath: `${lastRegionPath}${idx}`, start: -1})
         let data = analyzeStructure(entry, parents);
+        parents.pop();
 
         out.subRegions.push(data.fullData);
         out.strippedSubRegions.push(...data.regionData);

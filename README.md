@@ -159,6 +159,11 @@ Calling out known issues can help limit users opening duplicate issues against y
 
 ## Release Notes
 
+### 0.6.4
+
+* implemented circular detection for arrays better
+* prevented circular structures from showing up as a region in the hex view
+
 ### 0.6.3
 
 * fixed bug concerning instances with `if` conditions
