@@ -208,6 +208,8 @@
         <input type="checkbox" name="asciiInline" id="ascii-inline" onchange="editor.asciiInline = this.checked">
         <label for="eager-analysis">eager analysis:</label>
         <input type="checkbox" name="eagerAnalysis" id="eager-analysis">
+        <button onclick="editor.setLineNumber(document.getElementById('go-to-line').value)">jump to line:</button>
+        <input type="number" name="goToLine" value="4" min="0" id="go-to-line" onblur="if(!this.value) this.value = 0">
       </div>
     </div>
   </div>

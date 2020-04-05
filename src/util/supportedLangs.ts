@@ -7,7 +7,7 @@ export default [
   'html',
   'java',
   'javascript',
-// 'typescript', // soonTM
+  'typescript', // dun dun DUNNNNNNNN
   'lua',
   'perl',
   'php',

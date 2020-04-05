@@ -154,10 +154,34 @@ Calling out known issues can help limit users opening duplicate issues against y
 * [ ] optimization / usability
   * [x] use base64 to transfer data to/from webview
   * [ ] a scrollbar
-  * [ ] lazy load instances when possible
+  * [x] lazy load instances when possible
   * [ ] edit / save opened files directly via fudgedit
 
 ## Release Notes
+
+### 0.6.2
+
+* added support for recursive instances
+  * when a recursive instnace is detected, it will switch to lazy parsing mode and mark the instance with `[rec]`
+
+### 0.6.1
+
+* early typescript support
+* added "jump to line" feature in webview
+
+### 0.6.0
+
+#### added lazy mode to compile and examine!!!
+
+this means that you don't need to worry about parsing types with enormous instances anymore!
+when not running in eager mode:
+* In the KSExplorer panel, instances show up with `[instance]` which can then be expanded by clicking on them
+* regions of instances (if they exist) don't show up until they're clicked on
+* if for some reason you want to have fun clicking endlessly in a circular structure, you can do that too in 'lazy' mode
+
+Apart from that:
+* handle circular references when in eager mode
+* eager mode togglable via a checkbox in the webview
 
 ### 0.5.1
 

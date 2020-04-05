@@ -143,7 +143,22 @@ export const analyzeStructure = (input: any, parents?: ICircleCheck[]) => {
   for (const key of Reflect.ownKeys(input.__proto__).map(k => k.toString())) {
     if (["constructor", "_read"].includes(key) || key.startsWith('_m_')) continue;
     if (opts.eager) {
-      dataRoutine(key, true);
+      if (input.constructor.name !== input[key].constructor.name) dataRoutine(key, true);
+      else {
+        // prevents indefinitely recursive types from parsing infinitely (ex. linked lists)
+        let toPush = {
+          type: "[rec]",
+          name: key,
+          analysisLeaf: null,
+          regionPath:
+            (parents.length > 0)
+            ? `${parents[parents.length - 1].regionPath},${regionData.length}`
+            : `${regionData.length}`
+        }
+        toPush.analysisLeaf = new analysisLeaf(toPush, input, opts.callback);
+        regionData.push({start: NaN, end: NaN, name: '', content: ''});
+        fullData.push(toPush);
+      }
     }
     else {
       // enables the continuation of parsing on command
