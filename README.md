@@ -21,10 +21,6 @@ exposing the editor itself will be released at a later date if requested.
 8. wait for it to process and send all the data
 9. enjoy your visualization
 
-> **Note**: currently the compiler only operates in "eager" mode. This will be updated to include
-> a lazy mode in a future release.
-> **Avoid processing extremely large/complex files or else vscode may become unresponsive.**
-
 To generate a new parser from a ksy file in a target language, right click on a
 ksy file and select "compile to target language". A prompt will appear where you choose the
 target langugae of choice. Pick the language and a parser will be generated from the ksy.
@@ -47,9 +43,7 @@ The `files.associations` part will allow vscode to automaticaly open `ksy` files
 The `yaml.schemas` part will give schema support to all `ksy` files, allowing for features
 such as autocompletion and validation.
 
-> **note**: there are still a few bugs in the schema to work out.
-> Notably, enum/switch-on may give a false error expecting an object
-> and there is no duplicate key checking.
+> warning: there is no duplicate key checking.
 
 ## Features
 
@@ -93,6 +87,11 @@ distinguish it from the others.
 Hovering over a region with a raw value type, such as string or integer
 will (read: _should_) additionally display the obtained value in the best way it can.
 
+### chunks: focus on what's relevant
+
+If the option is enabled, chunking will automatically take place when a node is clicked in the
+tree-view. This will force the hex viewer to only render the chunk of the file that's relevant.
+
 ### tree views
 
 Upon compiling a kaitai struct file, a tree view in the explorer panel will pop up
@@ -115,113 +114,41 @@ overlay.
 
 ## Requirements
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
-
-## Extension Settings
-
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
-
-For example:
-
-This extension contributes the following settings:
-
-* `myExtension.enable`: enable/disable this extension
-* `myExtension.thing`: set to `blah` to do something
+None! It *should* all work out of the box!
 
 ## Known Issues
 
-Calling out known issues can help limit users opening duplicate issues against your extension.
-
-## TODO / PLANNED FEATURES
-
-* [ ] fudgedit
-  * [x] initial integration with vscode
-  * [ ] bundle fudgedit with the extension rather than pulling from unpkg
-* [x] regions
-  * [x] ensure arrays work
-  * [x] render instances properly
-  * [x] render sequences properly
-* [x] tree view
-* [ ] intuitive webview GUI
-  * [x] region depth adjustment
-  * [ ] property adjustment
-    * [x] line width
-    * [x] number of lines
-    * [x] group size
-    * [x] inline ASCII toggle
-    * [ ] editor mode toggle
-  * [x] selected byte value viewer
-* [ ] optimization / usability
-  * [x] use base64 to transfer data to/from webview
-  * [ ] a scrollbar
-  * [x] lazy load instances when possible
-  * [ ] edit / save opened files directly via fudgedit
+- sometimes the code is analyzed from the wrong offset somehow...
+- search function occasionally breaks
 
 ## Release Notes
 
-### 0.6.4
+After working for awhile to improve the hex viewer, I am proud to release 0.7.0 of this extension!
+There are a number of new things that have been added thanks to this new power.
+Here is the changelog entry for this version:
 
-* implemented circular detection for arrays better
-* prevented circular structures from showing up as a region in the hex view
+```md
+## [0.7.0]
+### Added
+- hex display updated to v1.0.0
+  - regions are now rendered for all views
+  - ability to toggle what type of view is desired
+  - ability to just render specific chunks of the open file
+  - a new binary view
+  - values can be found/jumped to with cmd/ctrl+F
+    - floating point values may be innaccurate
+  - find out more at my github site: https://fudgepop01.github.io
+- moved settings panel to the side
+  - it can be opened/closed by clicking on the vertical bar that says "settings"
+- bit-sized structures are now rendered properly.
 
-### 0.6.3
+### Removed
+- the incredibly-underwhelming info display
+```
 
-* fixed bug concerning instances with `if` conditions
+Speaking of the changelog, it now actually serves the correct function as a changelog. I've since cleaned up and restructured this README file.
 
-### 0.6.2
+## Future Plans:
 
-* added support for recursive instances
-  * when a recursive instnace is detected, it will switch to lazy mode and mark the instance with `[rec]`
-
-### 0.6.1
-
-* early typescript support
-* added "jump to line" feature in webview
-
-### 0.6.0
-
-#### added lazy mode to compile and examine!!!
-
-this means that you don't need to worry about parsing types with enormous instances anymore!
-when not running in eager mode:
-* In the KSExplorer panel, instances show up with `[instance]` which can then be expanded by clicking on them
-* regions of instances (if they exist) don't show up until they're clicked on
-* if for some reason you want to have fun clicking endlessly in a circular structure, you can do that too in 'lazy' mode
-
-Apart from that:
-* handle circular references when in eager mode
-* eager mode togglable via a checkbox in the webview
-
-### 0.5.1
-
-* fixed bug involving optional fields/instances that have an `if` attribute that returns `false`
-
-### 0.5.0
-
-* updated kaitai struct so that nested types with parameters work properly (ex. `my_type::my_nested_type_with_parameter(2)`)
-
-### 0.4.0
-
-* actually made it work on windows (sorry about that)
-* updated to the latest version of Kaitai Struct (0.8 ==> 0.9)
-
-### 0.3.1
-
-* fixed oversight preventing imports from being handled properly when compiling to a target language
-
-### 0.3.0
-
-* arrays of primitives now behave like arrays instead of displaying the contents in one line
-
-### 0.2.2
-
-* opening file as hex without hex editor already open will now properly wait for the editor to load
-
-### 0.2.1
-
-* Added the ability to import other ksy files
-* implemented a very basic info panel
-
-### 0.1.0
-
-First beta release, hurrah!
+- fix bugs
+- add ability to see ksy doc comments in the region tooltips

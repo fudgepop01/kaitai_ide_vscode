@@ -17,7 +17,9 @@
     ],
     "activationEvents": [
         "onView:kaitaiStructExplorer",
-        "onCommand:kaitaiStruct.openHexEditor"
+        "onWebviewPanel:fudgedit",
+        "onCommand:kaitaiStruct.openHexEditor",
+        "onLanguage:yaml"
     ],
     "main": "./dist/extension",
     "contributes": {
@@ -55,6 +57,20 @@
                 {
                     "command": "kaitaiStruct.compileKsy",
                     "when": "resourceExtname == .ksy"
+                }
+            ],
+            "commandPalette": [
+                {
+                    "command": "kaitaiStruct.openFileAsHex",
+                    "when": "false"
+                },
+                {
+                    "command": "kaitaiStruct.compileAndExamine",
+                    "when": "editorLangId == yaml"
+                },
+                {
+                    "command": "kaitaiStruct.compileKsy",
+                    "when": "editorLangId == yaml"
                 }
             ]
         },

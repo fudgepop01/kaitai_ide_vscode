@@ -26,6 +26,8 @@ const mergeData = (debugData: any, mainData: any, dataName: string, parents: ICi
   let out = {
     start: debugData.start + debugData.ioOffset,
     end: debugData.end + debugData.ioOffset,
+    bitStart: debugData.bitStart,
+    bitEnd: debugData.bitEnd,
     ioOffset: debugData.ioOffset,
     name: dataName,
     array: false,
@@ -124,8 +126,8 @@ export const analyzeStructure = (input: any, parents?: ICircleCheck[]) => {
     const merged = mergeData(debugInf, mainData, key, parents, regionData.length);
 
     const simple: ISimple = {
-      start: merged.start,
-      end: merged.end,
+      start: (merged.bitStart) ? merged.start - 1 + merged.bitStart / 8 : merged.start,
+      end: (merged.bitEnd) ? merged.end - 1 + merged.bitEnd / 8 : merged.end,
       name: merged.name,
       content: merged.content
     };

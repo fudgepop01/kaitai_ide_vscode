@@ -5,222 +5,187 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
 
-  <script src="https://unpkg.com/fudgedit@0.2.1/dist/fudgeapps.js"></script>
+  <script src="https://unpkg.com/fudgedit@1.0.0/dist/fudgeapps.js"></script>
   <title>Kaitai Struct IDE</title>
   <style>
     body {
       margin: 0;
       padding: 0;
+      width: 100vw;
+      height: 100vh;
     }
 
     fudge-hex-editor * {
       color: black;
     }
 
-    button:focus {
-      outline:none;
-    }
-
     #info-box {
-      position: fixed;
-      width: 100%;
-      height: 400px;
-      bottom: 0;
-      z-index: 100;
-      display: flex;
-      flex-direction: column;
-    }
-
-    #info-box .tabs {
-      height: 25px;
-      width: 100%;
-    }
-
-    #info-box .tabs > button {
-      width: 100px;
-      height: 25px;
-      display: inline-block;
-      background-color: #AAA;
-      border-top-left-radius: 2px;
-      border-top-right-radius: 2px;
-      border: 2px solid black;
-      border-bottom: none;
-    }
-
-    #info-box .tabs > button.active {
-      position: relative;
-      background-color: #FFF;
-      top: 2px;
-    }
-
-    #info-box .content {
-      flex-grow: 1;
-      background-color: #FFF;
-      border: 2px solid black;
-      border-bottom: none;
-    }
-
-    #info-box .content > div {
-      color: black;
-      padding: 20px;
-    }
-
-    #info-box .content > div:not(.active) {
       display: none;
     }
 
-    #settings.active {
-      display: grid;
-      grid-template-columns: 125px auto;
-      gap: 10px;
-    }
-    #settings > *:nth-child(2n-1) {
-      justify-self: right;
-    }
-    #settings > *:nth-child(2n) {
-      justify-self: left;
+    #settings-panel {
+      height: 100vh;
+      width: 250px;
+      background-color: #000B;
+      position: fixed;
+      right: 0;
+
+      display: flex;
+      transition: right .25s cubic-bezier(0.19, 1, 0.22, 1);
     }
 
-    table {
-      font-family: 'Sourcecode Pro', Courier, monospace;
-      table-layout: fixed;
-      border-collapse: collapse;
+    #settings-panel[active='false'] {
+      right: -225px;
+      transition: right .25s cubic-bezier(0.19, 1, 0.22, 1);
     }
 
-    thead {
-      background-color: black;
-      color: white;
-    }
-    thead th:nth-child(1) { width: 50px; }
-    thead th:nth-child(2) { width: 50px; }
-    thead th:nth-child(3) { width: 100px; }
-    thead th:nth-child(4) { width: 100px; }
-
-    th, td {
-      padding: 2px 5px;
-    }
-
-    tr:nth-child(2n) {
-      background-color: #EEE;
+    #settings-toggle {
+      height: 100%;
+      width: 25px;
+      flex-grow: 0;
+      flex-shrink: 0;
+      background-color: #000;
+      color: #fff;
+      writing-mode: vertical-rl;
+      text-orientation: upright;
+      font-size: 25px;
     }
 
-    tr td:not([rowspan]) {
-      text-align: right;
+    #settings {
+      height: 100%;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
 
-    tr:nth-child(6),
-    tr:nth-child(4) td:first-child {
-      border-bottom: 1px solid black;
+    .editor-container {
+      display: flex;
+      width: 100vw;
+      height: 100vh;
+      position: fixed;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .check-group {
+      height: 15px;
+      position: relative;
+      width: 200px;
+      margin-bottom: 5px;
+    }
+    .input-group {
+      height: 45px;
+      position: relative;
+      width: 200px;
+      margin-bottom: 5px;
+    }
+    .check-group label,
+    .input-group label {
+      font-size: 15px;
+      position: absolute;
+      top: 0;
+      left: 0;
+      margin: auto;
+      color: #fff;
+    }
+    .check-group input {
+      position: absolute;
+      top: 0;
+      right: 0;
+      margin: auto;
+    }
+    .input-group input,
+    .input-group select {
+      padding: 0 0.4em;
+      height: 25px;
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      margin: auto;
+      width: 100%;
+      box-sizing: border-box;
     }
   </style>
 </head>
 <body style="width: 100%; height: 100%; background-color: white;">
 
-  <div id="info-box">
-    <div class="tabs">
-      <button id="infoTab" onclick="selectTab('info')">info</button>
-      <button id="settingsTab" class="active" onclick="selectTab('settings')">settings</button>
-    </div>
-    <div class="content">
-      <div id="info">
-        <table>
-          <thead>
-            <tr>
-              <th>endian</th>
-              <th>size</th>
-              <th>unsigned</th>
-              <th>signed</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td rowspan="3">big</td>
-              <td>1 (08)</td>
-              <td id="u1be">---</td>
-              <td id="s1be">---</td>
-            </tr>
-            <tr>
-              <td>2 (16)</td>
-              <td id="u2be">---</td>
-              <td id="s2be">---</td>
-            </tr>
-            <tr>
-              <td>4 (32)</td>
-              <td id="u4be">---</td>
-              <td id="s4be">---</td>
-            </tr>
-            <!-- <tr>
-              <td>8 (64)</td>
-              <td id="u8be">N/A</td>
-              <td id="s8be">N/A</td>
-            </tr> -->
+  <div class="editor-container">
+    <fudge-hex-tooltip id="tooltip"></fudge-hex-tooltip>
+    <fudge-hex-editor
+      id="editor"
+      edit-type="readonly"
+    ></fudge-hex-editor>
+  </div>
 
-            <tr>
-              <td rowspan="3">little</td>
-              <td>1 (08)</td>
-              <td id="u1le">---</td>
-              <td id="s1le">---</td>
-            </tr>
-            <tr>
-              <td>2 (16)</td>
-              <td id="u2le">---</td>
-              <td id="s2le">---</td>
-            </tr>
-            <tr>
-              <td>4 (32)</td>
-              <td id="u4le">---</td>
-              <td id="s4le">---</td>
-            </tr>
-            <!-- <tr>
-              <td>8 (64)</td>
-              <td id="u8le">N/A</td>
-              <td id="s8le">N/A</td>
-            </tr> -->
-            <tr>
-              <td colspan="2">ASCII</td>
-              <td colspan="2" id="ASCII">---</td>
-            </tr>
-            <!-- <tr>
-              <td colspan="2">UTF8</td>
-              <td colspan="2" id="UTF8">---</td>
-            </tr>
-            <tr>
-              <td colspan="2">UTF16be</td>
-              <td colspan="2" id="UTF16be">---</td>
-            </tr>
-            <tr>
-              <td colspan="2">UTF16le</td>
-              <td colspan="2" id="UTF16le">---</td>
-            </tr> -->
-          </tbody>
-        </table>
+  <div id="settings-panel" active="false">
+    <div id="settings-toggle" onclick="toggleSettings()">
+      settings
+    </div>
+    <div id="settings">
+      <div class="input-group">
+        <label>region depth</label>
+        <input type="number" value="2" min="0" id="region-depth" onchange="editor.regionDepth = this.value">
       </div>
-      <div id="settings" class="active">
-        <label for="region-depth">region depth:</label>
-        <input type="number" name="regionDepth" value="2" id="region-depth" onchange="editor.regionDepth = this.value">
-        <label for="num-lines">number of lines:</label>
-        <input type="number" name="numLines" value="30" id="num-lines" onchange="editor.maxLines = this.value">
-        <label for="bytes-per-line">bytes per line:</label>
-        <input type="number" name="bytesPerLine" value="16" id="bytes-per-line" onchange="editor.bytesPerLine = this.value">
-        <label for="bytes-per-group">bytes per group:</label>
-        <input type="number" name="bytesPerGroup" value="4" id="bytes-per-group" onchange="editor.bytesPerGroup = this.value">
-        <label for="ascii-inline">ascii inline:</label>
-        <input type="checkbox" name="asciiInline" id="ascii-inline" onchange="editor.asciiInline = this.checked">
-        <label for="eager-analysis">eager analysis:</label>
-        <input type="checkbox" name="eagerAnalysis" id="eager-analysis">
-        <button onclick="editor.setLineNumber(document.getElementById('go-to-line').value)">jump to line:</button>
-        <input type="number" name="goToLine" value="4" min="0" id="go-to-line" onblur="if(!this.value) this.value = 0">
+      <div class="input-group">
+        <label>number of lines</label>
+        <input type="number" value="30" id="num-lines" onchange="editor.maxLines = this.value">
+      </div>
+      <div class="input-group">
+        <label>bytes per line</label>
+        <input type="number" value="16" id="bytes-per-line" onchange="editor.bytesPerLine = this.value">
+      </div>
+      <div class="check-group">
+        <label>display binary?</label>
+        <input type="checkbox" id="display-binary" onchange="editor.displayBin = this.checked">
+      </div>
+      <div class="check-group">
+        <label>display hex?</label>
+        <input type="checkbox" id="display-hex" checked onchange="editor.displayHex = this.checked">
+      </div>
+      <div class="check-group">
+        <label>display ASCII?</label>
+        <input type="checkbox" id="display-ascii" checked onchange="editor.displayAscii = this.checked">
+      </div>
+      <div class="input-group">
+        <label>bytes per group</label>
+        <input type="number" value="4" id="bytes-per-group" onchange="editor.bytesPerGroup = this.value">
+      </div>
+      <div class="input-group">
+        <label>bits per group</label>
+        <input type="number" value="8" id="bits-per-group" onchange="editor.bitsPerGroup = this.value">
+      </div>
+      <div class="check-group">
+        <label>ASCII inline?</label>
+        <input type="checkbox" id="ascii-inline" onchange="editor.asciiInline = this.checked">
+      </div>
+      <div class="check-group">
+        <label>eager analysis?</label>
+        <input type="checkbox" id="eager-analysis">
+      </div>
+      <div class="check-group">
+        <label>chunk selected?</label>
+        <input type="checkbox" id="chunk-selected">
+      </div>
+      <div class="input-group">
+        <label>jump to line</label>
+        <input type="number" value="0" min="0" id="go-to-line"
+          onblur="if(!this.value) this.value = 0"
+          onchange="editor.setLineNumber(this.value)"
+        >
       </div>
     </div>
   </div>
-
-  <fudge-hex-tooltip id="tooltip"></fudge-hex-tooltip>
-  <fudge-hex-editor id="editor" edit-type="readonly"></fudge-hex-editor>
 
   <script>
     // parameter adjustment state functions
     const editor = document.getElementById("editor");
     const tabs = document.getElementsByClassName("tabs").item(0).children;
+
+    function toggleSettings() {
+      let el = document.getElementById('settings-panel');
+      el.setAttribute('active', (el.getAttribute('active') === 'false') ? 'true' : 'false');
+    }
 
     function selectTab(tabName) {
       for (const tab of tabs) {
@@ -230,7 +195,6 @@
       document.getElementById(`${tabName}Tab`).classList.add('active');
       document.getElementById(tabName).classList.add('active');
     }
-
   </script>
 
   <script>
@@ -280,6 +244,14 @@
         })
       })
 
+      document.getElementById("chunk-selected").addEventListener("change", () => {
+        let shouldChunk = document.getElementById("chunk-selected").checked;
+        vscode.postMessage({
+          event: 'updateSelectMode',
+          args: shouldChunk
+        })
+      })
+
       let editorIsLoaded = false;
       const awaitLoaded = () => {
         return new Promise((resolve) => {
@@ -308,13 +280,26 @@
             editor.mode = "region";
             break;
           case 'jumpTo':
-            editor.setSelection({
-              start: data.start,
-              end: data.end
-            })
+            // editor.setSelection({
+            //   start: data.start,
+            //   end: data.end
+            // })
             editor.setCursorPosition(data.start);
             cursor = data.start;
             editor.setLineNumber(Math.floor(data.start / 16))
+            break;
+          case 'chunkFile':
+            if (editor.displayAsChunks && editor.chunks[0].start === data.chunkStart && editor.chunks[0].end === data.chunkEnd) {
+              editor.displayAsChunks = false;
+            } else {
+              editor.setLineNumber(0);
+              editor.displayAsChunks = true;
+              editor.chunks = [{
+                start: data.chunkStart,
+                end: data.chunkEnd
+              }];
+            }
+            break;
         }
       })
 

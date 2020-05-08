@@ -23,6 +23,8 @@ export default class editor implements vscode.Disposable {
   public tree: KSExplorer;
   public loadedPaths: string[] = [];
 
+  public autoChunkOnSelect: boolean = false;
+
   public context: vscode.ExtensionContext;
   public commands: vscode.Disposable[] = [];
   constructor(context: vscode.ExtensionContext) {
@@ -63,6 +65,12 @@ export default class editor implements vscode.Disposable {
 
   private doFullLoad(path: string) {
     const rawKsy = readFileSync(path, 'utf8');
+    try {
+      safeLoadYaml(rawKsy);
+    } catch (e) {
+      console.error(e);
+      vscode.window.showErrorMessage(e);
+    }
     const parsedYaml = safeLoadYaml(rawKsy);
 
     if (parsedYaml.meta.imports) {
@@ -100,22 +108,34 @@ export default class editor implements vscode.Disposable {
   }
 
   private setLocation(start: number, end: number) {
-    this.panel.webview.postMessage({
-      command: 'jumpTo',
-      start,
-      end
-    })
+    if (this.autoChunkOnSelect) {
+      this.panel.webview.postMessage({
+        command: 'chunkFile',
+        chunkStart: start,
+        chunkEnd: end
+      })
+    } else {
+      this.panel.webview.postMessage({
+        command: 'jumpTo',
+        start,
+        end
+      });
+    }
   }
 
   // -------------------------------------------
   //  Webview Message Handlers
   // -------------------------------------------
   private handleHexCursorChanged(cursor: number) {
-    console.log("cursor changed: " + cursor);
+    // console.log("cursor changed: " + cursor);
   }
 
   private handleUpdateCompilationMode(newEager: boolean) {
     opts.eager = newEager;
+  }
+
+  private handleUpdateSelectMode(newSelectMode: boolean) {
+    this.autoChunkOnSelect = newSelectMode;
   }
 
   // -------------------------------------------
@@ -152,6 +172,7 @@ export default class editor implements vscode.Disposable {
       switch(message.event) {
         case 'hexCursorChanged': this.handleHexCursorChanged(message.args); break;
         case 'updateCompilationMode': this.handleUpdateCompilationMode(message.args); break;
+        case 'updateSelectMode': this.handleUpdateSelectMode(message.args); break;
       }
     })
   }
@@ -162,13 +183,11 @@ export default class editor implements vscode.Disposable {
       if (!this.panel.visible) this.panel.reveal();
     }
 
-    // if (debugMode) console.log(`has node?: ${!!readFileSync}`);
-
-    const fileBuffer = readFileSync(args.fsPath);
+    const fileBuffer = (args) ?
+      readFileSync(args.fsPath) :
+      readFileSync(vscode.window.activeTextEditor.document.uri.fsPath);
     this.currentFile = fileBuffer;
     const payload = fileBuffer.toString('base64');
-
-    // if (debugMode) console.log(`payload: ${payload.constructor.name} - length: ${payload.length}`)
 
     this.panel.webview.postMessage({
       command: 'openFile',
@@ -180,10 +199,11 @@ export default class editor implements vscode.Disposable {
   }
 
   private async onCompileToTarget(args: vscode.Uri) {
-    if (!args.fsPath.endsWith(".ksy")) throw new Error("the specified file is not a ksy file");
+    if (args && !args.fsPath.endsWith(".ksy")) throw new Error("the specified file is not a ksy file");
 
+    const uri = (args) ? args : vscode.window.activeTextEditor.document.uri;
     this.loadedPaths = [];
-    const parsed = this.doFullLoad(args.fsPath);
+    const parsed = this.doFullLoad(uri.fsPath)
 
     const compiler = new KaitaiCompiler();
 
@@ -208,18 +228,19 @@ export default class editor implements vscode.Disposable {
     for (const [name, content] of Object.entries(compiled)){
       let thing = platform();
       if (platform() === 'win32') {
-        writeFileSync(args.fsPath.substring(0, args.fsPath.lastIndexOf('\\') + 1) + name, content, 'utf8');
+        writeFileSync(uri.fsPath.substring(0, uri.fsPath.lastIndexOf('\\') + 1) + name, content, 'utf8');
       } else {
-        writeFileSync(args.path.substring(0, args.fsPath.replace(/\\/g, '/').lastIndexOf('/') + 1) + name, content, 'utf8');
+        writeFileSync(uri.path.substring(0, uri.fsPath.replace(/\\/g, '/').lastIndexOf('/') + 1) + name, content, 'utf8');
       }
     }
   }
 
   private async onCompileAndExamine(args: vscode.Uri) {
-    if (!args.fsPath.endsWith(".ksy")) throw new Error("the specified file is not a ksy file");
+    if (args && !args.fsPath.endsWith(".ksy")) throw new Error("the specified file is not a ksy file");
 
     this.loadedPaths = [];
-    const parsed = this.doFullLoad(args.fsPath);
+    const uri = (args) ? args : vscode.window.activeTextEditor.document.uri;
+    const parsed = this.doFullLoad(uri.fsPath);
 
     const compiler = new KaitaiCompiler();
     const debug = true;
@@ -235,6 +256,13 @@ export default class editor implements vscode.Disposable {
 
     const fileName = Object.keys(compiled)[0];
     let fileData: string = compiled[fileName];
+    fileData = fileData.replace(
+      /(( +)this\._debug\.([a-zA-Z0-9]+)\.end = this\._io\.pos;)/g,
+      '$1\n$2this._debug.$3.bitEnd = (8 - this._io.bitsLeft) % 8;'
+    ).replace(
+      /(( +)this\._debug\.([a-zA-Z0-9]+) = .+)/g,
+      '$1\n$2this._debug.$3.bitStart = (8 - this._io.bitsLeft) % 8;'
+    );
 
     const className = fileName.substring(0, fileName.length - 3);
     let parseFunction: (KaitaiStream: KaitaiStream) => any;
