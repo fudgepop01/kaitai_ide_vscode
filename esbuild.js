@@ -6,11 +6,21 @@ const watchFlag = process.argv?.includes("--watch") == true;
 build({
   bundle: true,
   minify: false,
+  plugins: [
+    {
+      name: 'Test',
+      setup(build) {
+        build.onStart(() => {
+          console.log("Build starting...");
+        })
+      }
+    }
+  ],
   watch: watchFlag
     ? {
         onRebuild(error, result) {
-          if (error) console.log("Watch rebuild " + chalk.red("failed") + ".");
-          else console.log("Watch rebuild " + chalk.green("succeeded") + ".");
+          if (error) console.log("Build " + chalk.red("failed") + ".");
+          else console.log("Build " + chalk.green("completed") + ".");
         },
       }
     : false,
