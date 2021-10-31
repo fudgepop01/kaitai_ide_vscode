@@ -1,3 +1,4 @@
+const chalk = require("chalk");
 const { build } = require("esbuild");
 
 const watchFlag = process.argv?.includes("--watch") == true;
@@ -8,8 +9,8 @@ build({
   watch: watchFlag
     ? {
         onRebuild(error, result) {
-          if (error) console.error("Watch rebuild failed.");
-          else console.log("Watch rebuild succeeded.");
+          if (error) console.log("Watch rebuild " + chalk.red("failed") + ".");
+          else console.log("Watch rebuild " + chalk.green("succeeded") + ".");
         },
       }
     : false,
@@ -17,16 +18,59 @@ build({
   outdir: "dist",
   platform: "node",
   sourcemap: true,
-  external: [ "vscode" ],
+  external: ["vscode"],
 })
   .then((result) => {
-    if (watchFlag) {
-      console.log("Watching files for changes...");
-    } else {
-      console.log("Build complete.");
+    let buildFinishMessage = `Build ${chalk.green("completed")}`;
+    const numOfWarnings = (result.warnings && result.warnings.length) || 0;
+    if (numOfWarnings) {
+      let warningText = chalk.yellow(
+        numOfWarnings == 1 ? "warning" : "warnings"
+      );
+      buildFinishMessage += ` with ${chalk.whiteBright(
+        numOfWarnings
+      )} ${warningText}`;
     }
+    if (watchFlag) {
+      // "Build completed with [x] warning(s)"
+      buildFinishMessage += ". Watching files for changes...";
+    } else {
+      // "Build completed"
+      buildFinishMessage += ".";
+    }
+    console.log(buildFinishMessage);
   })
-  .catch((e) => {
-    console.error("build failed:", e);
-    // process.exit(1);
+  .catch((result) => {
+    let buildFinishMessage = `Build ${chalk.red("failed")}`;
+    const numOfErrors = (result.errors && result.errors.length) || 0;
+    const numOfWarnings = (result.warnings && result.warnings.length) || 0;
+    if (numOfErrors) {
+      let errorNoun = numOfErrors == 1 ? "error" : "errors";
+      buildFinishMessage += ` with ${chalk.whiteBright(
+        numOfErrors
+      )} ${chalk.red(errorNoun)}`;
+    }
+    if (numOfWarnings) {
+      let warningNoun = numOfWarnings == 1 ? "warning" : "warnings";
+      if (numOfErrors) {
+        // "Build failed with [x] errors(s) and [y] warning(s)"
+        buildFinishMessage += ` and ${chalk.whiteBright(
+          numOfWarnings
+        )} ${chalk.yellow(warningNoun)}`;
+      } else {
+        // "Build failed with [x] warning(s)"
+        buildFinishMessage += ` with ${chalk.whiteBright(
+          numOfWarnings
+        )} ${chalk.yellow(warningNoun)}`;
+      }
+    }
+    if (watchFlag) {
+      buildFinishMessage += `. ${chalk.italic(
+        "Watch canceled due to error on initial build."
+      )}`;
+    } else {
+      buildFinishMessage += ".";
+    }
+    console.error(buildFinishMessage);
+    process.exit(1);
   });
