@@ -37,23 +37,23 @@
     "commands": [
       {
         "command": "kaitaiStruct.openHexEditor",
-        "title": "open hex editor"
+        "title": "Open Hex Editor"
       },
       {
         "command": "kaitaiStruct.openFileAsHex",
-        "title": "open file as hex"
+        "title": "Open File as Hex"
       },
       {
         "command": "kaitaiStruct.compileAndExamine",
-        "title": "compile and examine ksy"
+        "title": "Compile and Examine KSY"
       },
       {
         "command": "kaitaiStruct.compileKsy",
-        "title": "compile to target language"
+        "title": "Compile to Target Language"
       },
       {
         "command": "kaitaiStruct.jumpToChunk",
-        "title": "jump to chunk"
+        "title": "Jump to Chunk"
       }
     ],
     "menus": {
