@@ -8,6 +8,7 @@
         ],
         "sourceMap": true,
         "experimentalDecorators": true,
+        "esModuleInterop": true,
         "noImplicitAny": false
     },
     "include": [
