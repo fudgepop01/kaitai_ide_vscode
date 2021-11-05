@@ -27,23 +27,8 @@ target langugae of choice. Pick the language and a parser will be generated from
 
 ## Pro Tip
 
-To make editing ksy files significantly easier, you'll want to download the [[redhat YAML Language Server](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml)].
-Then you'll want to include the following lines in your `settings.json`:
-
-```json
-"files.associations": {
-    "*.ksy": "yaml"
-},
-"yaml.schemas": {
-    "https://raw.githubusercontent.com/kaitai-io/ksy_schema/master/ksy_schema.json": "*.ksy"
-},
-```
-
-The `files.associations` part will allow vscode to automaticaly open `ksy` files in `YAML` mode.
-The `yaml.schemas` part will give schema support to all `ksy` files, allowing for features
-such as autocompletion and validation.
-
-> warning: there is no duplicate key checking.
+Thanks to contributions from [BryceBarbara](https://github.com/BryceBarbara), it is no longer necessary to manually
+edit the file associations. Thank you Bryce!
 
 ## Features
 

@@ -1,6 +1,14 @@
 # Change Log
 All notable changes to the "kaitai-struct-vscode" extension will be documented in this file.
 
+## [0.8.0]
+### Added
+- various contributions from github user [BryceBarbara](https://github.com/BryceBarbara)
+
+### Fixed (at last)
+- the region highlighting showing up at the wrong location for no discernable reason 
+- importing of js files or something (idk it has been awhile oops)
+
 ## [0.7.0]
 ### Added
 - hex display updated to v1.0.0

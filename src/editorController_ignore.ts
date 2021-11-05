@@ -12,8 +12,6 @@ import { readFileSync, writeFileSync } from 'fs';
 import { analyzeStructure, opts } from './util/regionAnalysis';
 import { KSExplorer } from './KSExplorerController';
 import supportedLangs from './util/supportedLangs';
-import jsImporter from './util/jsImporter';
-import Importer from './util/jsImporter';
 
 const namespace = "kaitaiStruct";
 
@@ -23,10 +21,7 @@ export default class editor implements vscode.Disposable {
   public compiledKsy: string;
   public panel: vscode.WebviewPanel;
   public tree: KSExplorer;
-  public loadedPaths: {
-    [key: string]: object
-  } = {};
-  public jsImporter: Importer;
+  public loadedPaths: string[] = [];
 
   public autoChunkOnSelect: boolean = false;
 
@@ -70,28 +65,31 @@ export default class editor implements vscode.Disposable {
 
   private doFullLoad(path: string) {
     const rawKsy = readFileSync(path, 'utf8');
-    let parsedYaml;
-
-    if (this.loadedPaths[path]) {
-      return this.loadedPaths[path];
-    } else {
-      try {
-        parsedYaml = safeLoadYaml(rawKsy);
-        this.loadedPaths[path] = parsedYaml;
-      } catch (e) {
-        console.error(e);
-        vscode.window.showErrorMessage(e);
-      }
+    try {
+      safeLoadYaml(rawKsy);
+    } catch (e) {
+      console.error(e);
+      vscode.window.showErrorMessage(e);
     }
+    const parsedYaml = safeLoadYaml(rawKsy);
 
     if (parsedYaml.meta.imports) {
+      if (!parsedYaml.types) parsedYaml.types = {};
+
       for (const rawPath of parsedYaml.meta.imports as string[]) {
+
         const importPath = (platform() === "win32") ?
           joinPath(path.substring(0, path.lastIndexOf('\\')), ...(rawPath + '.ksy').split("/")).normalize():
           joinPath(path.substring(0, path.lastIndexOf('/')), ...(rawPath + '.ksy').split("/")).normalize();
+        if (this.loadedPaths.includes(importPath)) continue;
+        else this.loadedPaths.push(importPath);
 
-        this.doFullLoad(importPath);
+        let toAppend = this.doFullLoad(importPath);
+
+        parsedYaml.types[toAppend.meta.id] = toAppend;
       }
+
+      delete parsedYaml.meta.imports;
     }
 
     return parsedYaml;
@@ -158,8 +156,8 @@ export default class editor implements vscode.Disposable {
       }
     );
 
-    const rawhtml = readFileSync(vscode.Uri.file(joinPath(this.context.extensionPath, 'webviews', 'webview.html')).fsPath, 'utf8');
-    panel.webview.html = rawhtml.replace(/{{EXTPATH}}/g, this.context.extensionPath);
+    const rawHtml = readFileSync(vscode.Uri.file(joinPath(this.context.extensionPath, 'webviews', 'webview.html')).fsPath, 'utf8');
+    panel.webview.html = rawHtml.replace(/{{EXTPATH}}/g, this.context.extensionPath);
     panel.onDidDispose(() => {
       this.panel = null;
       if (this.tree) {
@@ -195,7 +193,7 @@ export default class editor implements vscode.Disposable {
       command: 'openFile',
       file: {
         bits: payload,
-        name: 'idkSomeValue'
+        name: 'idkSomethingRandom'
       }
     })
   }
@@ -204,9 +202,8 @@ export default class editor implements vscode.Disposable {
     if (args && !args.fsPath.endsWith(".ksy")) throw new Error("the specified file is not a ksy file");
 
     const uri = (args) ? args : vscode.window.activeTextEditor.document.uri;
+    this.loadedPaths = [];
     const parsed = this.doFullLoad(uri.fsPath)
-    if (!this.jsImporter) this.jsImporter = new Importer(this.loadedPaths);
-    else this.jsImporter.setLoadedPaths(this.loadedPaths);
 
     const compiler = new KaitaiCompiler();
 
@@ -221,7 +218,7 @@ export default class editor implements vscode.Disposable {
 
     let compiled;
     try {
-      compiled = await compiler.compile(language, parsed, this.jsImporter, debug === 'true');
+      compiled = await compiler.compile(language, parsed, null, debug === 'true');
     } catch(e) {
       console.log(e);
       vscode.window.showErrorMessage(`${e.s$1}: ${e.e$1.s$1} \ntrace:\n${e.stackTrace$1}`);
@@ -241,66 +238,44 @@ export default class editor implements vscode.Disposable {
   private async onCompileAndExamine(args: vscode.Uri) {
     if (args && !args.fsPath.endsWith(".ksy")) throw new Error("the specified file is not a ksy file");
 
+    this.loadedPaths = [];
     const uri = (args) ? args : vscode.window.activeTextEditor.document.uri;
     const parsed = this.doFullLoad(uri.fsPath);
-    if (!this.jsImporter) this.jsImporter = new Importer(this.loadedPaths);
-    else this.jsImporter.setLoadedPaths(this.loadedPaths);
 
     const compiler = new KaitaiCompiler();
     const debug = true;
 
     let compiled;
     try {
-      compiled = await compiler.compile('javascript', parsed, this.jsImporter, debug);
+      compiled = await compiler.compile('javascript', parsed, null, debug);
     } catch(e) {
       console.error(e);
       vscode.window.showErrorMessage(`${e.s$1}: ${e.e$1.s$1} \ntrace:\n${e.stackTrace$1}`);
     }
 
-    for (const [name, out] of Object.entries(compiled) as [string, string][]) {
-      compiled[name] = out.replace(
-        /(( +)this\._debug\.([a-zA-Z0-9]+)\.end = this\._io\.pos;)/g,
-        '$1\n$2this._debug.$3.bitEnd = (8 - this._io.bitsLeft) % 8;'
-      ).replace(
-        /(( +)this\._debug\.([a-zA-Z0-9]+) = .+)/g,
-        '$1\n$2this._debug.$3.bitStart = (8 - this._io.bitsLeft) % 8;'
-      );
-    }
 
+    const fileName = Object.keys(compiled)[0];
+    let fileData: string = compiled[fileName];
+    fileData = fileData.replace(
+      /(( +)this\._debug\.([a-zA-Z0-9]+)\.end = this\._io\.pos;)/g,
+      '$1\n$2this._debug.$3.bitEnd = (8 - this._io.bitsLeft) % 8;'
+    ).replace(
+      /(( +)this\._debug\.([a-zA-Z0-9]+) = .+)/g,
+      '$1\n$2this._debug.$3.bitStart = (8 - this._io.bitsLeft) % 8;'
+    );
 
+    const className = fileName.substring(0, fileName.length - 3);
     let parseFunction: (KaitaiStream: KaitaiStream) => any;
-    let fnBuilder = '';
-    const lPath = uri.fsPath.replace(/\\/g, '/').toLowerCase();
-    let mainClassName = lPath.substring(lPath.lastIndexOf('/') + 1, lPath.lastIndexOf('.'));
-    for (const [fileName, out] of Object.entries(compiled) as [string, string][]) {
-      const className = fileName.substring(0, fileName.length - 3);
-      if (mainClassName.toLowerCase() === className.toLowerCase()) mainClassName = className;
-      fnBuilder += `
-        ${out.substring(out.indexOf(`var ${className}`), out.lastIndexOf(`return ${className}`))}
-      `
-    }
-    console.log(mainClassName);
-    try {
-      eval(`
-      function mainFn(KaitaiStream) {
-        ${fnBuilder}
 
-        return ${mainClassName};
+    eval(`
+      function workDamnit(KaitaiStream) {
+        ${fileData.substring(fileData.indexOf(`var ${className}`), fileData.lastIndexOf(`return ${className}`))}
+        return ${className}
       }
-
-      parseFunction = mainFn;
+      parseFunction = workDamnit;
     `);
-    } catch (e) {
-      console.error(e);
-    }
 
-
-    console.log(parseFunction);
-    // DO NOT it as a Buffer otherwise glitches WILL occur
-    // it will try to use it as a Uint8Array but it will fail, reading into memory it shouldn't.
-    // I don't fully understand why... maybe something to do with the deprecated Buffer API?
-    const clss = new KaitaiStream(new Uint8Array(this.currentFile), 0);
-    const out = new (parseFunction(KaitaiStream))(clss);
+    const out = new (parseFunction(KaitaiStream))(new KaitaiStream(this.currentFile, 0));
     try {
       await out._root._read();
     } catch(e) {
