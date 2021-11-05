@@ -1,8 +1,8 @@
 'use strict';
 
 import * as vscode from 'vscode';
-import * as KaitaiStream from 'kaitai-struct/KaitaiStream';
-import * as KaitaiCompiler from './compiler/kaitai-struct-compiler.js';
+import KaitaiStream from 'kaitai-struct/KaitaiStream';
+import KaitaiCompiler from './compiler/kaitai-struct-compiler.js';
 import { safeLoad as safeLoadYaml } from 'js-yaml';
 
 import { join as joinPath } from 'path';
@@ -156,8 +156,8 @@ export default class editor implements vscode.Disposable {
       }
     );
 
-    const rawhtml = readFileSync(vscode.Uri.file(joinPath(this.context.extensionPath, 'webviews', 'webview.html')).fsPath, 'utf8');
-    panel.webview.html = rawhtml.replace(/{{EXTPATH}}/g, this.context.extensionPath);
+    const rawHtml = readFileSync(vscode.Uri.file(joinPath(this.context.extensionPath, 'webviews', 'webview.html')).fsPath, 'utf8');
+    panel.webview.html = rawHtml.replace(/{{EXTPATH}}/g, this.context.extensionPath);
     panel.onDidDispose(() => {
       this.panel = null;
       if (this.tree) {
@@ -167,7 +167,7 @@ export default class editor implements vscode.Disposable {
     });
     this.panel = panel;
 
-    // recieving messages
+    // receiving messages
     this.panel.webview.onDidReceiveMessage((message: {event: string, args: any}) => {
       switch(message.event) {
         case 'hexCursorChanged': this.handleHexCursorChanged(message.args); break;
@@ -193,7 +193,7 @@ export default class editor implements vscode.Disposable {
       command: 'openFile',
       file: {
         bits: payload,
-        name: 'derp'
+        name: 'idkSomethingRandom'
       }
     })
   }
