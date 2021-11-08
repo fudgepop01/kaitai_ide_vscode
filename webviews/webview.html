@@ -8,6 +8,10 @@
   <script src="https://unpkg.com/fudgedit@1.0.0/dist/fudgeapps.js"></script>
   <title>Kaitai Struct IDE</title>
   <style>
+    :root {
+      --settings-width-open: 250px;
+      --settings-width-closed: 25px;
+    }
     body {
       margin: 0;
       padding: 0;
@@ -23,33 +27,49 @@
       display: none;
     }
 
+    .editor-container {
+      display: flex;
+      width: 100vw;
+      height: 100vh;
+      position: fixed;
+      justify-content: center;
+      align-items: center;
+      padding-right: var(--settings-width-closed);
+    }
+
     #settings-panel {
       height: 100vh;
-      width: 250px;
+      width: var(--settings-width-open);
       background-color: #000B;
       position: fixed;
       right: 0;
+      overflow: hidden;
 
       display: flex;
       transition: right .25s cubic-bezier(0.19, 1, 0.22, 1);
     }
 
     #settings-panel[active='false'] {
-      right: -225px;
+      right: calc(var(--settings-width-closed) - var(--settings-width-open));
       transition: right .25s cubic-bezier(0.19, 1, 0.22, 1);
     }
 
     #settings-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-evenly;
+      cursor: pointer;
+      text-transform: uppercase;
+
       height: 100%;
-      width: 25px;
+      width: var(--settings-width-closed);
+      font-size: var(--settings-width-closed);
+      color: #fff;
       flex-grow: 0;
       flex-shrink: 0;
       background-color: #000;
-      color: #fff;
       writing-mode: vertical-rl;
       text-orientation: upright;
-      cursor: pointer;
-      font-size: 25px;
     }
 
     #settings {
@@ -58,51 +78,35 @@
       display: flex;
       flex-direction: column;
       align-items: center;
+      overflow: auto;
     }
 
-    .editor-container {
-      display: flex;
-      width: 100vw;
-      height: 100vh;
-      position: fixed;
-      justify-content: center;
-      align-items: center;
+    .check-group, 
+    .input-group {
+      width: 200px;
+      margin-bottom: 5px;
+      position: relative;
     }
 
     .check-group {
-      height: 15px;
-      position: relative;
-      width: 200px;
-      margin-bottom: 5px;
+      height: 15px;      
     }
     .input-group {
-      height: 45px;
-      position: relative;
-      width: 200px;
-      margin-bottom: 5px;
+      height: 45px; 
     }
     .check-group label,
     .input-group label {
       font-size: 15px;
-      position: absolute;
-      top: 0;
-      left: 0;
-      margin: auto;
+      margin: 0 auto;
       color: #fff;
     }
     .check-group input {
-      position: absolute;
-      top: 0;
-      right: 0;
-      margin: auto;
+      margin: 0 auto;
     }
     .input-group input,
     .input-group select {
       padding: 0 0.4em;
       height: 25px;
-      position: absolute;
-      bottom: 0;
-      left: 0;
       margin: auto;
       width: 100%;
       box-sizing: border-box;
@@ -121,7 +125,14 @@
 
   <div id="settings-panel" active="false">
     <div id="settings-toggle" onclick="toggleSettings()">
-      settings
+      <span>s</span>
+      <span>e</span>
+      <span>t</span>
+      <span>t</span>
+      <span>i</span>
+      <span>n</span>
+      <span>g</span>
+      <span>s</span>
     </div>
     <div id="settings">
       <div class="input-group">
@@ -181,7 +192,7 @@
   <script>
     // parameter adjustment state functions
     const editor = document.getElementById("editor");
-    const tabs = document.getElementsByClassName("tabs").item(0).children;
+    const tabs = document.getElementsByClassName("tabs").item(0)?.children;
 
     function toggleSettings() {
       let el = document.getElementById('settings-panel');
