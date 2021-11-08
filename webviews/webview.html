@@ -218,6 +218,7 @@
       const editor = document.getElementById("editor");
       editor.addEventListener("hexCursorChanged", async (newCursorPosition) => {
         vscode.postMessage({
+          source: 'webview',
           event: 'hexCursorChanged',
           args: newCursorPosition.detail + 1
         })
@@ -251,6 +252,7 @@
       document.getElementById("eager-analysis").addEventListener("change", () => {
         let eager = document.getElementById("eager-analysis").checked;
         vscode.postMessage({
+          source: 'webview',
           event: 'updateCompilationMode',
           args: eager
         })
@@ -259,6 +261,7 @@
       document.getElementById("chunk-selected").addEventListener("change", () => {
         let shouldChunk = document.getElementById("chunk-selected").checked;
         vscode.postMessage({
+          source: 'webview',
           event: 'updateSelectMode',
           args: shouldChunk
         })
