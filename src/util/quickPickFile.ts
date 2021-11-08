@@ -91,7 +91,6 @@ export async function quickPickFile(
             searchToken.cancel();
             searchToken = null;
           }
-          // rgs.forEach((rg) => rg.kill());
           input.items = [];
           if (!value) {
             input.busy = false;
