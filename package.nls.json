@@ -1,0 +1,10 @@
+{
+  "displayName": "kaitai struct vscode",
+  "description": "An extension aimed at adding the full power of kaitai struct to visual studio code.",
+  "kaitaiStruct.openFileAsHex.title": "Open File as Hex",
+  "kaitaiStruct.pickFileForHexEditor.title": "Pick a file to open in the Hex Editor",
+  "kaitaiStruct.compileAndExamine.title": "Compile and Examine KSY",
+  "kaitaiStruct.compileKsy.title": "Compile to Target Language",
+  "kaitaiStruct.jumpToChunk.title": "Jump to Chunk",
+  "kaitaiStruct.trace.desc": "Enable debug logging for the Kaitai Struct extension."
+}

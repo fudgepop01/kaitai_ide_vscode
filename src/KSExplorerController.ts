@@ -77,10 +77,8 @@ export class KSTreeDataProvider implements vscode.TreeDataProvider<KSNode> {
 export class KSExplorer implements vscode.Disposable {
 
   private KSViewer: vscode.TreeView<KSNode>;
-  private context: vscode.ExtensionContext;
 
-  constructor(context: vscode.ExtensionContext, data: any) {
-    this.context = context;
+  constructor(data: any) {
     const treeDataProvider = new KSTreeDataProvider(data);
 
     this.KSViewer = vscode.window.createTreeView("kaitaiStructExplorer", { treeDataProvider });

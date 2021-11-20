@@ -1,4 +1,6 @@
-export default [
+import { KSCompilerSupportedLanguage } from "kaitai-struct-compiler/kaitai-struct-compiler";
+
+export default <KSCompilerSupportedLanguage[]>[
   'construct',
   'cpp_stl',
   'csharp',
@@ -7,11 +9,10 @@ export default [
   'html',
   'java',
   'javascript',
-  'typescript', // dun dun DUNNNNNNNN
+  'typescript',
   'lua',
   'perl',
   'php',
   'python',
   'ruby',
-// 'rust' // also soonTM
-]
+];
