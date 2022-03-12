@@ -1,21 +1,19 @@
 {
-    "compilerOptions": {
-        "module": "commonjs",
-        "target": "es6",
-        "outDir": "./out",
-        "lib": [
-            "es2017"
-        ],
-        "sourceMap": true,
-        "experimentalDecorators": true,
-        "esModuleInterop": true,
-        "noImplicitAny": false
-    },
-    "include": [
-        "src/**/*"
-    ],
-    "exclude": [
-        "node_modules",
-        ".vscode-test"
-    ]
+  "compilerOptions": {
+    "outDir": "./out",
+    "allowSyntheticDefaultImports": true,
+    "lib": ["ES2020"],
+    "module": "ES2020",
+    "moduleResolution": "node",
+    "target": "ES2020",
+    "sourceMap": true,
+    "experimentalDecorators": true,
+    "esModuleInterop": true,
+    "noImplicitAny": false,
+    "strict": true,
+    "resolveJsonModule": true,
+    "typeRoots": ["node_modules/@types", "./src/typings"]
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", ".vscode-test"]
 }

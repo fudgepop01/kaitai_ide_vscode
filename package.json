@@ -1,13 +1,14 @@
 {
   "name": "kaitai-struct-vscode",
-  "displayName": "kaitai struct vscode",
-  "description": "An extension aimed at adding the full power of kaitai struct to visual studio code",
+  "displayName": "%displayName%",
+  "description": "%description%",
   "repository": {
     "url": "https://github.com/fudgepop01/kaitai_ide_vscode"
   },
   "version": "0.8.1",
   "publisher": "fudgepops",
   "engines": {
+    "node": ">=14",
     "vscode": "^1.35.0"
   },
   "categories": [
@@ -18,7 +19,6 @@
   "activationEvents": [
     "onView:kaitaiStructExplorer",
     "onWebviewPanel:fudgedit",
-    "onCommand:kaitaiStruct.openHexEditor",
     "onLanguage:yaml"
   ],
   "main": "./dist/extension",
@@ -42,24 +42,46 @@
     ],
     "commands": [
       {
-        "command": "kaitaiStruct.openHexEditor",
-        "title": "Open Hex Editor"
+        "command": "kaitaiStruct.pickFileForHexEditor",
+        "title": "%kaitaiStruct.pickFileForHexEditor.title%",
+        "category": "KaitaiStruct",
+        "icon": {
+          "light": "./media/hex-light.svg",
+          "dark": "./media/hex-dark.svg"
+        }
       },
       {
         "command": "kaitaiStruct.openFileAsHex",
-        "title": "Open File as Hex"
-      },
-      {
-        "command": "kaitaiStruct.compileAndExamine",
-        "title": "Compile and Examine KSY"
+        "title": "%kaitaiStruct.openFileAsHex.title%",
+        "category": "KaitaiStruct",
+        "icon": {
+          "light": "./media/hex-light.svg",
+          "dark": "./media/hex-dark.svg"
+        }
       },
       {
         "command": "kaitaiStruct.compileKsy",
-        "title": "Compile to Target Language"
+        "title": "%kaitaiStruct.compileKsy.title%",
+        "category": "KaitaiStruct",
+        "icon": {
+          "light": "./media/archive-light.svg",
+          "dark": "./media/archive-dark.svg"
+        }
+      },
+      {
+        "command": "kaitaiStruct.compileAndExamine",
+        "title": "%kaitaiStruct.compileAndExamine.title%",
+        "category": "KaitaiStruct",
+        "icon": {
+          "light": "./media/archive-eye-light.svg",
+          "dark": "./media/archive-eye-dark.svg"
+        }
       },
       {
         "command": "kaitaiStruct.jumpToChunk",
-        "title": "Jump to Chunk"
+        "title": "%kaitaiStruct.jumpToChunk.title%",
+        "category": "KaitaiStruct",
+        "icon": "$(symbol-structure)"
       }
     ],
     "menus": {
@@ -68,26 +90,24 @@
           "command": "kaitaiStruct.openFileAsHex"
         },
         {
-          "command": "kaitaiStruct.compileAndExamine",
+          "command": "kaitaiStruct.compileKsy",
           "when": "resourceExtname == .ksy"
         },
         {
-          "command": "kaitaiStruct.compileKsy",
+          "command": "kaitaiStruct.compileAndExamine",
           "when": "resourceExtname == .ksy"
         }
       ],
-      "commandPalette": [
+      "editor/title": [
         {
-          "command": "kaitaiStruct.openFileAsHex",
-          "when": "false"
+          "command": "kaitaiStruct.pickFileForHexEditor",
+          "group": "navigation",
+          "when": "resourceExtname == .ksy && !kaitaiStruct.hasFileInHexEditor"
         },
         {
           "command": "kaitaiStruct.compileAndExamine",
-          "when": "editorLangId == yaml"
-        },
-        {
-          "command": "kaitaiStruct.compileKsy",
-          "when": "editorLangId == yaml"
+          "group": "navigation",
+          "when": "resourceExtname == .ksy && kaitaiStruct.hasFileInHexEditor"
         }
       ]
     },
@@ -98,6 +118,23 @@
           "name": "KSExplorer"
         }
       ]
+    },
+    "configuration": {
+      "type": "object",
+      "title": "Kaitai Struct IDE",
+      "order": 20,
+      "properties": {
+        "kaitaiStruct.trace": {
+          "type": "string",
+          "enum": [
+            "off",
+            "verbose"
+          ],
+          "default": "off",
+          "description": "%kaitaiStruct.trace.desc%",
+          "scope": "window"
+        }
+      }
     }
   },
   "scripts": {
@@ -108,9 +145,10 @@
     "test": "npm run build && node ./node_modules/vscode/bin/test"
   },
   "devDependencies": {
+    "@types/glob": "^7.2.0",
     "@types/js-yaml": "^3.12.3",
     "@types/mocha": "^2.2.42",
-    "@types/node": "^7.10.9",
+    "@types/node": "^14",
     "chalk": "^4.1.2",
     "esbuild": "^0.13.12",
     "ts-loader": "^6.2.2",
@@ -119,9 +157,12 @@
   },
   "dependencies": {
     "fudgedit": "0.0.1",
+    "glob": "^7.2.0",
     "iconv-lite": "^0.5.1",
     "js-yaml": "^3.13.1",
-    "kaitai-struct": "^0.8.0-SNAPSHOT.11",
-    "safer-eval": "^1.3.6"
+    "kaitai-struct": "^0.9.0",
+    "kaitai-struct-compiler": "^0.9.0",
+    "safer-eval": "^1.3.6",
+    "vscode-nls": "^5.0.0"
   }
 }
