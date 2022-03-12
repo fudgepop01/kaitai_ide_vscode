@@ -203,6 +203,7 @@ export default class editor implements vscode.Disposable {
   private async onCompileToTarget(args: vscode.Uri) {
     if (args && !args.fsPath.endsWith(".ksy")) throw new Error("the specified file is not a ksy file");
 
+    this.loadedPaths = {};
     const uri = (args) ? args : vscode.window.activeTextEditor.document.uri;
     const parsed = this.doFullLoad(uri.fsPath)
     if (!this.jsImporter) this.jsImporter = new Importer(this.loadedPaths);
@@ -241,6 +242,7 @@ export default class editor implements vscode.Disposable {
   private async onCompileAndExamine(args: vscode.Uri) {
     if (args && !args.fsPath.endsWith(".ksy")) throw new Error("the specified file is not a ksy file");
 
+    this.loadedPaths = {};
     const uri = (args) ? args : vscode.window.activeTextEditor.document.uri;
     const parsed = this.doFullLoad(uri.fsPath);
     if (!this.jsImporter) this.jsImporter = new Importer(this.loadedPaths);

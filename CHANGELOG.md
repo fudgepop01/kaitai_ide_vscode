@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to the "kaitai-struct-vscode" extension will be documented in this file.
 
+## [0.8.1]
+### Fixed
+- made it so the extension cache actually refreshes between compiles
+
 ## [0.8.0]
 ### Added
 - various contributions from github user [BryceBarbara](https://github.com/BryceBarbara)
