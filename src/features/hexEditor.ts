@@ -9,6 +9,7 @@ import KaitaiStream from 'kaitai-struct/KaitaiStream';
 import { analyzeStructure, opts } from "../util/regionAnalysis";
 import { KSExplorer } from "../KSExplorerController";
 import { KSParseFunction } from "../ksEngine";
+import { getNonce } from "../util/getNonce";
 
 const localize = nls.loadMessageBundle();
 
@@ -66,6 +67,7 @@ export class HexEditor extends Disposable {
       input,
       context.extensionPath,
       logger,
+      context
     );
   }
 
@@ -74,8 +76,10 @@ export class HexEditor extends Disposable {
     private input: HexEditorInput,
     private readonly extensionPath: string,
     private readonly logger: Logger,
+    context: vscode.ExtensionContext
   ) {
     super();
+    this.extensionPath = extensionPath;
 
     opts.callback = (regions) => this.setRegions(regions);
 
@@ -85,9 +89,22 @@ export class HexEditor extends Disposable {
       ).fsPath,
       "utf8"
     );
+
     panel.webview.html = webviewHtml.replace(
+      /{{EXTPATH_MODULE}}/g,
+      panel.webview.asWebviewUri(vscode.Uri.joinPath(context.extensionUri, "webviews", "resources", "build", "fudgeapps.esm.js")).toString()
+    ).replace(
+      /{{EXTPATH_NOMODULE}}/g,
+      panel.webview.asWebviewUri(vscode.Uri.joinPath(context.extensionUri, "webviews", "resources", "build", "fudgeapps.js")).toString()
+    ).replace(
       /{{EXTPATH}}/g,
-      this.extensionPath
+      panel.webview.asWebviewUri(vscode.Uri.joinPath(context.extensionUri, "webviews", "resources", "build")).toString()
+    ).replace(
+      /{{WEBVIEW_CSP_SRC}}/g,
+      panel.webview.cspSource
+    ).replace(
+      /{{NONCE}}/g,
+      getNonce()
     );
     this._register(panel.onDidDispose(() => this.dispose()));
 
@@ -156,7 +173,7 @@ export class HexEditor extends Disposable {
     })
   }
 
-  public async updateKaitaiStruct(parseFunction: KSParseFunction) {
+  public async updateKaitaiStruct(parseFunction: KSParseFunction, docComments: {[key: string]: string}) {
     if (!this.currentFile) return;
     const stream = new KaitaiStream(new Uint8Array(this.currentFile), 0);
     const out = new (parseFunction(KaitaiStream))(stream) as any;
@@ -167,7 +184,7 @@ export class HexEditor extends Disposable {
       console.error(e);
     }
 
-    this.generateRegions(out);
+    this.generateRegions(out, docComments);
   }
 
   public jumpToChunk(start: number, end: number) {
@@ -195,14 +212,14 @@ export class HexEditor extends Disposable {
     vscode.commands.executeCommand('setContext', 'kaitaiStruct.hasFileInHexEditor', true);
   }
 
-  private generateRegions(ksyOutput: any) {
+  private generateRegions(ksyOutput: any, docComments: {[key: string]: string} = {}) {
     console.log(ksyOutput);
+    let analyzed;
     try {
-      analyzeStructure(ksyOutput);
+      analyzed = analyzeStructure(ksyOutput, docComments);
     } catch(e) {
       console.error(e)
     }
-    const analyzed = analyzeStructure(ksyOutput)
     const regions = analyzed.regionData;
     console.log(analyzed.fullData);
     const tree = new KSExplorer(analyzed.fullData);
@@ -277,9 +294,7 @@ export class HexEditor extends Disposable {
       retainContextWhenHidden: true,
       enableScripts: true,
       localResourceRoots: [
-        vscode.Uri.file(
-          path.join(context.extensionPath, "node_modules/fudgedit/dist")
-        ),
+        vscode.Uri.joinPath(context.extensionUri, "webviews", "resources"),
       ],
     }
   }

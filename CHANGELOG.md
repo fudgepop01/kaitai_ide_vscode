@@ -1,6 +1,29 @@
 # Change Log
 All notable changes to the "kaitai-struct-vscode" extension will be documented in this file.
 
+## [Version 0.9.0]
+### Bugfixes
+- _unchecking_ the "chunk selected" option will now immediately display the full view once more
+- made commands uh... well, the commands actually work now.
+- scrolling with a scroll wheel finally works after literally 4 years
+
+### Additions
+- updated the kaitai struct compiler itself
+- fixed major previously-somehow-uncaught bug that prevented commands from actually working (whoops)
+- new options
+  - "non-display character" is what will be displayed when the character does not have an ASCII equivalent
+  - "non-display opacity" is how opaque said character is
+  - "go to line" replaced by the _significantly_ more useful "go to offset"
+- **updated the editor itself**
+  - makes it compatible with scroll wheels
+  - hold `Ctrl` while scrolling to scroll 10x the normal amount
+  - hold `Shift` while scrolling to scroll 1 line at a time
+  - hold `Ctrl+Shift` while scrolling to scroll 1 _page_ at a time
+  - the tooltip text can be selected by clicking on a region. It will immediately warp to the cursor in a selectable state, only unfreezing when the editor is clicked again
+- **BETA typescript support**
+  - The compiler for this extension was built with a typescript fork created by [@Theaninova](https://github.com/Theaninova)
+  - ([here is the pull request for that feature](kaitai-io/kaitai_struct_compiler#249))
+
 ## [0.8.1]
 ### Fixed
 - made it so the extension cache actually refreshes between compiles

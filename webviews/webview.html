@@ -3,9 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'self' vscode-resource: https:;
+              script-src vscode-resource: {{WEBVIEW_CSP_SRC}} 'unsafe-inline' 'unsafe-eval' https:;
+              style-src vscode-resource: 'self' 'unsafe-inline';
+              img-src 'self' vscode-resource: data:"
+  />
 
-  <script src="https://unpkg.com/fudgedit@1.0.0/dist/fudgeapps.js"></script>
+  <script type="module" src="{{EXTPATH_MODULE}}"></script>
+  <script nomodule src="{{EXTPATH_NOMODULE}}"></script>
+
   <title>Kaitai Struct IDE</title>
   <style>
     :root {
@@ -116,11 +123,11 @@
 <body style="width: 100%; height: 100%; background-color: white;">
 
   <div class="editor-container">
-    <fudge-hex-tooltip id="tooltip"></fudge-hex-tooltip>
-    <fudge-hex-editor
+    <hex-tooltip id="tooltip"></hex-tooltip>
+    <hex-editor
       id="editor"
       edit-type="readonly"
-    ></fudge-hex-editor>
+    ></hex-editor>
   </div>
 
   <div id="settings-panel" active="false">
@@ -167,6 +174,14 @@
         <label>bits per group</label>
         <input type="number" value="8" id="bits-per-group" onchange="editor.bitsPerGroup = this.value">
       </div>
+      <div class="input-group">
+        <label>non-display character</label>
+        <input type="text" value="\u2022" id="non-display-character" onchange="editor.nonDisplayCharacter = this.value">
+      </div>
+      <div class="input-group">
+        <label>non-display opacity</label>
+        <input type="number" value="0.45" min="0" max="1" step="0.05" id="non-display-opacity" onchange="editor.nonDisplayOpacity = this.value">
+      </div>
       <div class="check-group">
         <label>ASCII inline?</label>
         <input type="checkbox" id="ascii-inline" onchange="editor.asciiInline = this.checked">
@@ -180,18 +195,29 @@
         <input type="checkbox" id="chunk-selected">
       </div>
       <div class="input-group">
-        <label>jump to line</label>
-        <input type="number" value="0" min="0" id="go-to-line"
-          onblur="if(!this.value) this.value = 0"
-          onchange="editor.setLineNumber(this.value)"
+        <label>go to offset 0x</label>
+        <input type="text" id="go-to-offset"
+          onblur="if(!this.value) this.value = '0'"
+          onchange="
+            let offset = parseInt(`0x${this.value}`, 16);
+            editor.setCursorPosition(offset);
+            editor.setLineNumber(Math.floor(offset / editor.bytesPerLine))
+          "
         >
       </div>
     </div>
   </div>
 
+  <!-- <script type="module">
+    import {hex_editor, hex_tooltip} from "{{EXTPATH}}/p-857ca353.entry.js";
+    customElements.define("hex-editor", hex_editor);
+    customElements.define("hex-tooltip", hex_tooltip);
+  </script> -->
+
   <script>
     // parameter adjustment state functions
     const editor = document.getElementById("editor");
+    console.dir(editor);
     const tabs = document.getElementsByClassName("tabs").item(0)?.children;
 
     function toggleSettings() {
@@ -216,6 +242,8 @@
       let cursor = 0;
 
       const editor = document.getElementById("editor");
+      const tooltip = document.getElementById("tooltip");
+
       editor.addEventListener("hexCursorChanged", async (newCursorPosition) => {
         vscode.postMessage({
           source: 'webview',
@@ -264,7 +292,8 @@
           source: 'webview',
           event: 'updateSelectMode',
           args: shouldChunk
-        })
+        });
+        if (!shouldChunk) editor.displayAsChunks = shouldChunk;
       })
 
       let editorIsLoaded = false;
@@ -301,7 +330,7 @@
             // })
             editor.setCursorPosition(data.start);
             cursor = data.start;
-            editor.setLineNumber(Math.floor(data.start / 16))
+            editor.setLineNumber(Math.floor(data.start / editor.bytesPerLine))
             break;
           case 'chunkFile':
             if (editor.displayAsChunks && editor.chunks[0].start === data.chunkStart && editor.chunks[0].end === data.chunkEnd) {

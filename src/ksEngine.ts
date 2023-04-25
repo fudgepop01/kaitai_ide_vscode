@@ -5,12 +5,14 @@ import KaitaiCompiler, {
   KSCompileResult,
   KSCompilerSupportedLanguage,
   YamlImporter,
-} from "kaitai-struct-compiler/kaitai-struct-compiler";
+} from "./ksc-typescript/kaitai-struct-compiler-js-fastopt";
 import * as path from "path";
 import { CachedImporter } from "./util/yamlImporter";
 import { Logger } from "./logger";
 import { safeLoad as safeLoadYaml } from "js-yaml";
 import { readFileSync } from "fs";
+import { snakeToCamel } from "./util/convertToCamelcase";
+import { flattenObj } from "./util/flattenObject";
 
 const localize = nls.loadMessageBundle();
 
@@ -24,9 +26,12 @@ export interface LoadedKsyFile {
 
 export class KSEngine {
   private compiler: KaitaiCompiler = new KaitaiCompiler();
-  public constructor(private readonly logger: Logger) {}
-
+  public constructor(private readonly logger: Logger) {};
+  
+  public docComments: {[key: string]: string} = {};
   public async loadKsyFile(resource: vscode.Uri): Promise<LoadedKsyFile> {
+    this.docComments = {};
+
     if (!resource.fsPath.endsWith(".ksy")) {
       const message = localize(
         "onFileNotKsy",
@@ -48,6 +53,10 @@ export class KSEngine {
         try {
           const parsedYaml = safeLoadYaml(rawKsy);
           loadedKsyFilesByPath[filePath] = parsedYaml;
+          // const flattened: {[key: string]: string} = flattenObj(parsedYaml);
+          // for (const [key, val] of Object.entries(flattened)) {
+          //   if (key.endsWith("doc")) this.docComments[key.substring(0, key.length - 4)] = val;
+          // }
           if (parsedYaml?.meta?.imports) {
             for (const rawPath of parsedYaml.meta.imports as string[]) {
               const importPath = path
@@ -119,10 +128,12 @@ export class KSEngine {
         mainClassName !== className
       )
         mainClassName = className;
+
       const codeStartIdx = out.indexOf(`var ${className}`);
       const codeEndIdx = out.lastIndexOf(`return ${className}`);
       fnBuilder += `\r\n${out.substring(codeStartIdx, codeEndIdx)}\r\n`;
     }
+    mainClassName = snakeToCamel(mainClassName);
 
     console.log("Determined the Kaitai class name:", mainClassName);
     return <KSParseFunction>(
@@ -134,7 +145,7 @@ export class KSEngine {
     language: KSCompilerSupportedLanguage,
     parsedKsy: LoadedKsyFile,
     debugMode: boolean = false
-  ): Promise<KSCompileResult> {
+    ): Promise<KSCompileResult> {
     return this.compiler.compile(
       language,
       parsedKsy.parsedKsy,

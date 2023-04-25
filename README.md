@@ -1,4 +1,4 @@
-# kaitai-struct-vscode [BETA]
+# kaitai-struct-vscode (featuring BETA typescript support)
 
 This is an extension built by Dominick Reba (@fudgepop01) that allows for relative ease of development
 of ksy files. To find out more about Kaitai Struct and what it can do,
@@ -101,39 +101,44 @@ overlay.
 
 None! It *should* all work out of the box!
 
-## Known Issues
-
-- sometimes the code is analyzed from the wrong offset somehow...
-- search function occasionally breaks
-
 ## Release Notes
 
-After working for awhile to improve the hex viewer, I am proud to release 0.7.0 of this extension!
-There are a number of new things that have been added thanks to this new power.
-Here is the changelog entry for this version:
+The hex viewer has been improved once more (at last!). As such, it makes sense to actually update this extension once again (at last)
 
-```md
-## [0.7.0]
-### Added
-- hex display updated to v1.0.0
-  - regions are now rendered for all views
-  - ability to toggle what type of view is desired
-  - ability to just render specific chunks of the open file
-  - a new binary view
-  - values can be found/jumped to with cmd/ctrl+F
-    - floating point values may be innaccurate
-  - find out more at my github site: https://fudgepop01.github.io
-- moved settings panel to the side
-  - it can be opened/closed by clicking on the vertical bar that says "settings"
-- bit-sized structures are now rendered properly.
+Here's the changelog for this verison:
 
-### Removed
-- the incredibly-underwhelming info display
-```
+### Version 0.9.0
+- The commands should work again!
+- updated the kaitai struct compiler itself
+- fixed major previously-somehow-uncaught bug that prevented commands from actually working (whoops)
+- new options
+  - "non-display character" is what will be displayed when the character does not have an ASCII equivalent
+  - "non-display opacity" is how opaque said character is
+  - "go to line" replaced by the _significantly_ more useful "go to offset"
+- **updated the editor itself**
+  - makes it compatible with scroll wheels
+  - hold `Ctrl` while scrolling to scroll 10x the normal amount
+  - hold `Shift` while scrolling to scroll 1 line at a time
+  - hold `Ctrl+Shift` while scrolling to scroll 1 _page_ at a time
+  - the tooltip text can be selected by clicking on a region. It will immediately warp to the cursor in a selectable state, only unfreezing when the editor is clicked again
+- **BETA typescript support**
+  - The compiler for this extension was built with a typescript fork created by [@Theaninova](https://github.com/Theaninova)
+  - ([here is the pull request for that feature](kaitai-io/kaitai_struct_compiler#249))
 
-Speaking of the changelog, it now actually serves the correct function as a changelog. I've since cleaned up and restructured this README file.
+### Bugfixes
+- _unchecking_ the "chunk selected" option will now immediately display the full view once more
+- made commands uh... well, the commands actually work now.
 
 ## Future Plans:
 
-- fix bugs
-- add ability to see ksy doc comments in the region tooltips
+- eventually fix bugs when they show up
+- find job lol
+- MAYBE make doc comments show up in regions 
+  - (that would be nice but is a bit more effort than anticipated atm)
+
+## Contributions / Credits:
+
+- [StencilJS](https://stenciljs.com) for the tools that enabled me to build the hex editor
+- [@Theaninova](https://github.com/Theaninova) for the beta typescript compiler
+- [@BryceBarbara](https://github.com/BryceBarbara) for effectively refactoring an enormous amount of this extension's codebase, effectively making it much more maintainable
+- [Kaitai Struct](https://kaitai.io) (this literally would not exist without it)

@@ -10,7 +10,7 @@ declare module "kaitai-struct-compiler/kaitai-struct-compiler" {
         importYaml(name: string, mode: "rel" | "abs"): Promise<unknown>;
     }
 
-    export type KSCompilerSupportedLanguage = "construct" | "cpp_stl" | "csharp" | "graphviz" | "go" | "html" | "java" | "javascript" | "lua" | "nim" | "perl" | "php" | "python" | "ruby";
+    export type KSCompilerSupportedLanguage = "construct" | "cpp_stl" | "csharp" | "graphviz" | "go" | "html" | "java" | "javascript" | "typescript" | "lua" | "nim" | "perl" | "php" | "python" | "ruby";
 
     export interface KSCompileResult {
         [file: string]: string;

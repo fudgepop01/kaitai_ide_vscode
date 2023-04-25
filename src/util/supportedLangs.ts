@@ -1,4 +1,4 @@
-import { KSCompilerSupportedLanguage } from "kaitai-struct-compiler/kaitai-struct-compiler";
+import { KSCompilerSupportedLanguage } from "../ksc-typescript/kaitai-struct-compiler-js-fastopt";
 
 export default <KSCompilerSupportedLanguage[]>[
   'construct',

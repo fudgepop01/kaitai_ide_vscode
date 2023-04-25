@@ -2,7 +2,7 @@
 
 import * as vscode from 'vscode';
 import KaitaiStream from 'kaitai-struct/KaitaiStream';
-import KaitaiCompiler from './compiler/kaitai-struct-compiler.js';
+import KaitaiCompiler from './ksc-typescript/kaitai-struct-compiler.js';
 import { safeLoad as safeLoadYaml } from 'js-yaml';
 
 import { join as joinPath } from 'path';
@@ -54,11 +54,11 @@ export default class editor implements vscode.Disposable {
   private generateRegions(ksyOutput: any) {
     console.log(ksyOutput);
     try {
-      analyzeStructure(ksyOutput);
+      analyzeStructure(ksyOutput, {});
     } catch(e) {
       console.error(e)
     }
-    const analyzed = analyzeStructure(ksyOutput)
+    const analyzed = analyzeStructure(ksyOutput, {})
     const regions = analyzed.regionData;
     console.log(analyzed.fullData);
     const tree = new KSExplorer(this.context, analyzed.fullData);

@@ -6,7 +6,7 @@ import { writeFileSync } from "fs";
 import { isKsyFile } from "../util/file";
 import type { Command } from "../commandManager";
 import type { KSEngine } from "../ksEngine";
-import type { KSCompilerSupportedLanguage } from "kaitai-struct-compiler/kaitai-struct-compiler";
+import type { KSCompilerSupportedLanguage } from "../ksc-typescript/kaitai-struct-compiler-js-fastopt";
 
 const localize = nls.loadMessageBundle();
 
@@ -47,7 +47,7 @@ export class CompileCommand implements Command {
         placeHolder: "false",
       })) === "true";
 
-    if (typeof debugMode !== "string") return;
+    if (typeof debugMode !== "boolean") return;
 
     try {
       const compiled = await this.ksEngine.safeLoadAndCompileTo(

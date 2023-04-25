@@ -1,4 +1,4 @@
-import type { YamlImporter } from "kaitai-struct-compiler/kaitai-struct-compiler"
+import type { YamlImporter } from "../ksc-typescript/kaitai-struct-compiler-js-fastopt"
 
 export class CachedImporter implements YamlImporter {
   public yamlFiles: Record<string,unknown>

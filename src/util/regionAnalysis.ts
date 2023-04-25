@@ -12,6 +12,7 @@ interface ISimple {
   name: string;
   content?: any;
   subRegions?: any;
+  comments?: string;
 }
 
 interface ICircleCheck {
@@ -21,7 +22,7 @@ interface ICircleCheck {
   regionPath: string;
 }
 
-const mergeData = (debugData: any, mainData: any, dataName: string, parents: ICircleCheck[], regionNum: number | string) => {
+const mergeData = (debugData: any, mainData: any, dataName: string, parents: ICircleCheck[], regionNum: number | string, docComments: {[key: string]: string}) => {
 
   let out = {
     start: debugData.start + debugData.ioOffset,
@@ -61,7 +62,7 @@ const mergeData = (debugData: any, mainData: any, dataName: string, parents: ICi
     out.content = mainData;
     out.array = false;
   }
-  else if (Array.isArray(mainData)) {
+  else if (Array.isArray(mainData) && mainData.length > 0) {
     // we're dealing with an array of data
     out.array = true;
     out.type = mainData[0].constructor.name;
@@ -90,7 +91,7 @@ const mergeData = (debugData: any, mainData: any, dataName: string, parents: ICi
       if (parents.length != 0) lastRegionPath = parents[parents.length - 1].regionPath + ',';
       for (const [idx, entry] of mainData.entries()) {
         parents.push({name: `${idx}`, type: entry.constructor.name, regionPath: `${lastRegionPath}${idx}`, start: -1})
-        let data = analyzeStructure(entry, parents);
+        let data = analyzeStructure(entry, docComments, parents);
         parents.pop();
 
         out.subRegions.push(data.fullData);
@@ -98,9 +99,15 @@ const mergeData = (debugData: any, mainData: any, dataName: string, parents: ICi
       }
     }
   }
+  else if (Array.isArray(mainData)) {
+    out.array = true;
+    out.type = "UNKNOWN TYPE";
+    out.subRegions = [];
+    out.strippedSubRegions = [];
+  }
   else  {
     // we're dealing with another object
-    const data = analyzeStructure(mainData, parents);
+    const data = analyzeStructure(mainData, docComments, parents);
     out.subRegions = data.fullData;
     out.strippedSubRegions = data.regionData;
   }
@@ -109,7 +116,7 @@ const mergeData = (debugData: any, mainData: any, dataName: string, parents: ICi
   return out;
 }
 
-export const analyzeStructure = (input: any, parents?: ICircleCheck[]) => {
+export const analyzeStructure = (input: any, docComments: {[key: string]: string}, parents?: ICircleCheck[]) => {
   if (!parents) parents = [];
 
   const regionData = [];
@@ -123,7 +130,7 @@ export const analyzeStructure = (input: any, parents?: ICircleCheck[]) => {
     else debugInf = input._debug[key];
 
     if (mainData == undefined || key.startsWith('_m_')) return;
-    const merged = mergeData(debugInf, mainData, key, parents, regionData.length);
+    const merged = mergeData(debugInf, mainData, key, parents, regionData.length, docComments);
 
     const simple: ISimple = {
       start: (merged.bitStart) ? merged.start - 1 + merged.bitStart / 8 : merged.start,
@@ -131,6 +138,11 @@ export const analyzeStructure = (input: any, parents?: ICircleCheck[]) => {
       name: merged.name,
       content: merged.content
     };
+
+    const docComment = docComments[parents!.map(p => p.type).join(".")];
+    if (docComment) {
+      simple.comments = docComment;
+    }
 
     if (merged.strippedSubRegions) {
       simple.subRegions = merged.strippedSubRegions;
@@ -199,7 +211,8 @@ export class analysisLeaf {
   constructor(
     private elementData,
     private parent,
-    private callback
+    private callback,
+    private docComments: {[key: string]: string}
   ) {}
 
   run() {
@@ -212,7 +225,7 @@ export class analysisLeaf {
     debugInf = input._debug[`_m_${key}`];
 
     if (mainData == undefined) return;
-    const merged = mergeData(debugInf, mainData, key, [], this.elementData.regionPath);
+    const merged = mergeData(debugInf, mainData, key, [], this.elementData.regionPath, this.docComments);
 
     const simple: ISimple = {
       start: merged.start,
@@ -220,6 +233,11 @@ export class analysisLeaf {
       name: merged.name,
       content: merged.content
     };
+
+    const docComment = this.docComments[this.parent.map(p => p.type).join(".")];
+    if (docComment) {
+      simple.comments = docComment;
+    }
 
     if (merged.strippedSubRegions) {
       simple.subRegions = merged.strippedSubRegions;
