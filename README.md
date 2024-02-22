@@ -103,9 +103,18 @@ None! It *should* all work out of the box!
 
 ## Release Notes
 
-The hex viewer has been improved once more (at last!). As such, it makes sense to actually update this extension once again (at last)
+### Version 1.0.0
+#### Bugfixes
+- WHOOPS I managed to break instances 8 months ago and never got around to fixing that
+  - (in previous versions it only worked with the "eager analysis" box checked)
+- Error messages from compilation now properly show the path to the problem
 
-Here's the changelog for this verison:
+#### Additions
+- kaitai struct compiler is updated once more (with VERY beta typescript support)
+- KSExplorer renamed to "Kaitai Struct Explorer"
+  - keyboard navigation for this panel improved
+- more colors to differentiate between regions with varying levels of saturation depending on depth
+- doc comments are shown when hovering over a region
 
 ### Version 0.9.0
 - The commands should work again!
@@ -125,16 +134,15 @@ Here's the changelog for this verison:
   - The compiler for this extension was built with a typescript fork created by [@Theaninova](https://github.com/Theaninova)
   - ([here is the pull request for that feature](kaitai-io/kaitai_struct_compiler#249))
 
-### Bugfixes
+#### Bugfixes
 - _unchecking_ the "chunk selected" option will now immediately display the full view once more
 - made commands uh... well, the commands actually work now.
 
 ## Future Plans:
 
-- eventually fix bugs when they show up
-- find job lol
-- MAYBE make doc comments show up in regions 
-  - (that would be nice but is a bit more effort than anticipated atm)
+- find MORE job lol
+- ~~MAYBE make doc comments show up in regions~~ 
+  - I DID IT, WOO
 
 ## Contributions / Credits:
 
