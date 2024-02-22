@@ -222,7 +222,7 @@ export class HexEditor extends Disposable {
     }
     const regions = analyzed.regionData;
     console.log(analyzed.fullData);
-    const tree = new KSExplorer(analyzed.fullData);
+    const tree = new KSExplorer(this, analyzed.fullData);
     this.tree = tree;
     // console.log(tree);
     this.setRegions(regions);
@@ -232,7 +232,7 @@ export class HexEditor extends Disposable {
   // -------------------------------------------
   //  Post Message to Webview
   // -------------------------------------------
-  private setRegions(regionData: any) {
+  public setRegions(regionData: any) {
     opts.currentRegions = regionData;
     const regionB64 = Buffer.from(JSON.stringify(regionData)).toString("base64");
     this.panel.webview.postMessage({
@@ -255,6 +255,13 @@ export class HexEditor extends Disposable {
         end
       });
     }
+  }
+
+  public setRegionDepth(depth: number) {
+    this.panel.webview.postMessage({
+      command: 'setRegionDepth',
+      depth
+    });
   }
 
   // -------------------------------------------

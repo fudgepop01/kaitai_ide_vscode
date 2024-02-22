@@ -6,7 +6,7 @@
     "url": "https://github.com/fudgepop01/kaitai_ide_vscode"
   },
   "icon": "./media/kaitai_16x_dark.png",
-  "version": "0.9.0",
+  "version": "1.0.0",
   "publisher": "fudgepops",
   "engines": {
     "node": ">=14",
@@ -18,7 +18,6 @@
     "Programming Languages"
   ],
   "activationEvents": [
-    "onView:kaitaiStructExplorer",
     "onWebviewPanel:fudgedit",
     "onLanguage:yaml"
   ],
@@ -116,7 +115,7 @@
       "explorer": [
         {
           "id": "kaitaiStructExplorer",
-          "name": "KSExplorer"
+          "name": "Kaitai Struct Explorer"
         }
       ]
     },
@@ -139,9 +138,9 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "npm run build",
-    "build": "node esbuild.js",
-    "watch": "npm run build -- --watch",
+    "vscode:prepublish": "npm run compile",
+    "compile": "node esbuild.js",
+    "watch": "tsc -watch -p ./",
     "test": "npm run build && node ./node_modules/vscode/bin/test"
   },
   "devDependencies": {

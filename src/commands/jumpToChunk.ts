@@ -12,8 +12,9 @@ export class JumpToChunkCommand implements Command {
 
   public constructor(private readonly hexEditorManager: HexEditorManager) {}
 
-  public async execute(start: number, end: number) {
+  public async execute(start: number, end: number, depth: number) {
     if (!this.hexEditorManager.hexEditor) return;
     this.hexEditorManager.hexEditor.setLocation(start, end);
+    if (depth !== -1) this.hexEditorManager.hexEditor.setRegionDepth(depth);
   }
 }

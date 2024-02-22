@@ -257,24 +257,24 @@
         let infoView = new DataView(infoBuffer.buffer);
         let isNeg;
 
-        document.getElementById("ASCII").innerText = new TextDecoder("ascii").decode(infoBuffer.buffer);
+        // document.getElementById("ASCII").innerText = new TextDecoder("ascii").decode(infoBuffer.buffer);
 
-        document.getElementById("u1be").innerText = infoView.getUint8(0);
-        document.getElementById("u2be").innerText = infoView.getUint16(0);
-        document.getElementById("u4be").innerText = infoView.getUint32(0);
+        // document.getElementById("u1be").innerText = infoView.getUint8(0);
+        // document.getElementById("u2be").innerText = infoView.getUint16(0);
+        // document.getElementById("u4be").innerText = infoView.getUint32(0);
 
-        document.getElementById("s1be").innerText = infoView.getInt8(0);
-        document.getElementById("s2be").innerText = infoView.getInt16(0);
-        document.getElementById("s4be").innerText = infoView.getInt32(0);
+        // document.getElementById("s1be").innerText = infoView.getInt8(0);
+        // document.getElementById("s2be").innerText = infoView.getInt16(0);
+        // document.getElementById("s4be").innerText = infoView.getInt32(0);
 
-        infoView = new DataView(infoBuffer.subarray(0, 8).reverse().buffer);
-        document.getElementById("u1le").innerText = infoView.getUint8(7);
-        document.getElementById("u2le").innerText = infoView.getUint16(6);
-        document.getElementById("u4le").innerText = infoView.getUint32(3);
+        // infoView = new DataView(infoBuffer.subarray(0, 8).reverse().buffer);
+        // document.getElementById("u1le").innerText = infoView.getUint8(7);
+        // document.getElementById("u2le").innerText = infoView.getUint16(6);
+        // document.getElementById("u4le").innerText = infoView.getUint32(3);
 
-        document.getElementById("s1le").innerText = infoView.getInt8(7);
-        document.getElementById("s2le").innerText = infoView.getInt16(6);
-        document.getElementById("s4le").innerText = infoView.getInt32(3);
+        // document.getElementById("s1le").innerText = infoView.getInt8(7);
+        // document.getElementById("s2le").innerText = infoView.getInt16(6);
+        // document.getElementById("s4le").innerText = infoView.getInt32(3);
 
       })
       document.getElementById("eager-analysis").addEventListener("change", () => {
@@ -321,7 +321,13 @@
             break;
           case 'updateRegions':
             editor.regions = JSON.parse(atob(data.regionB64));
+            console.log(editor.regions);
             editor.mode = "region";
+            break;
+          case 'setRegionDepth':
+            console.log(data);
+            editor.regionDepth = data.depth;
+            document.getElementById("region-depth").value = data.depth;
             break;
           case 'jumpTo':
             // editor.setSelection({

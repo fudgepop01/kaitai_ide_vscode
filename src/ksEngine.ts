@@ -53,10 +53,10 @@ export class KSEngine {
         try {
           const parsedYaml = safeLoadYaml(rawKsy);
           loadedKsyFilesByPath[filePath] = parsedYaml;
-          // const flattened: {[key: string]: string} = flattenObj(parsedYaml);
-          // for (const [key, val] of Object.entries(flattened)) {
-          //   if (key.endsWith("doc")) this.docComments[key.substring(0, key.length - 4)] = val;
-          // }
+          const flattened: {[key: string]: string} = flattenObj(parsedYaml);
+          for (const [key, val] of Object.entries(flattened)) {
+            if (key.endsWith("doc")) this.docComments[key.substring(0, key.length - 4)] = val.trim();
+          }
           if (parsedYaml?.meta?.imports) {
             for (const rawPath of parsedYaml.meta.imports as string[]) {
               const importPath = path
@@ -187,7 +187,7 @@ export class KSEngine {
           stackTrace$1: string;
         };
         vscode.window.showErrorMessage(
-          `${typedError.s$1}: ${typedError.e$1.s$1} \ntrace:\n${typedError.stackTrace$1}`
+          `${typedError.s$1}`
         );
       } else {
         vscode.window.showErrorMessage(

@@ -1,4 +1,5 @@
 import { nestedGetter } from './nestedPropertyMethods';
+import { KSNode } from '../KSExplorerController';
 
 export const opts = {
   eager: false,
@@ -12,7 +13,8 @@ interface ISimple {
   name: string;
   content?: any;
   subRegions?: any;
-  comments?: string;
+  doc?: string;
+  color?: string;
 }
 
 interface ICircleCheck {
@@ -20,11 +22,12 @@ interface ICircleCheck {
   type: string;
   name: string;
   regionPath: string;
+  obj: KSNode;
 }
 
-const mergeData = (debugData: any, mainData: any, dataName: string, parents: ICircleCheck[], regionNum: number | string, docComments: {[key: string]: string}) => {
+const mergeData = (debugData: any, mainData: any, dataName: string, parents: ICircleCheck[], regionNum: number | string, docComments: {[key: string]: string}): KSNode => {
 
-  let out = {
+  let out: KSNode = {
     start: debugData.start + debugData.ioOffset,
     end: debugData.end + debugData.ioOffset,
     bitStart: debugData.bitStart,
@@ -33,9 +36,9 @@ const mergeData = (debugData: any, mainData: any, dataName: string, parents: ICi
     name: dataName,
     array: false,
     type: mainData.constructor.name,
-    subRegions: null,
-    strippedSubRegions: null,
-    content: null
+    subRegions: undefined,
+    strippedSubRegions: undefined,
+    content: undefined
   };
 
   // prevents circular references on initial compile (important for eager mode)
@@ -45,8 +48,8 @@ const mergeData = (debugData: any, mainData: any, dataName: string, parents: ICi
     // return from circular here
     return {
       ...out,
-      start: NaN,
-      end: NaN,
+      start: -1,
+      end: -1,
       type: '[circular] - ' + parents.slice(0, existingIndex + 1).map(({name}) => name).join('/')
     }
   } else {
@@ -56,7 +59,9 @@ const mergeData = (debugData: any, mainData: any, dataName: string, parents: ICi
     parents.push({start: out.start, type: out.type, name: out.name, regionPath: `${lastRegionPath}${regionNum}`});
   }
 
-
+  const lastRegionPath = (parents.length != 0) ? parents[parents.length - 1].regionPath + ',' : '';
+  out.regionPath = lastRegionPath.substring(0, lastRegionPath.length - 1);
+  
   if (typeof mainData !== "object" || mainData instanceof Uint8Array) {
     // contents are a primitive type
     out.content = mainData;
@@ -72,7 +77,7 @@ const mergeData = (debugData: any, mainData: any, dataName: string, parents: ICi
 
       let size = debugData.end - debugData.start;
       let offsetTracker = (size / mainData.length);
-      out.subRegions = (mainData as any[]).map((val: any, index: number) => {
+      out.subRegions = (mainData as any[]).map((val: any, index: number): KSNode => {
         return {
           name: '' + index,
           type: mainData.constructor.name,
@@ -87,15 +92,12 @@ const mergeData = (debugData: any, mainData: any, dataName: string, parents: ICi
       out.subRegions = [];
       out.strippedSubRegions = [];
 
-      let lastRegionPath = '';
-      if (parents.length != 0) lastRegionPath = parents[parents.length - 1].regionPath + ',';
       for (const [idx, entry] of mainData.entries()) {
-        parents.push({name: `${idx}`, type: entry.constructor.name, regionPath: `${lastRegionPath}${idx}`, start: -1})
+        parents.push({name: `${idx}`, type: entry.constructor.name, regionPath: `${lastRegionPath}${idx}`, start: -1, obj: out});
         let data = analyzeStructure(entry, docComments, parents);
         parents.pop();
-
         out.subRegions.push(data.fullData);
-        out.strippedSubRegions.push(...data.regionData);
+        out.strippedSubRegions.push({start: NaN, end: NaN, name: '', content: '', subRegions: data.regionData});
       }
     }
   }
@@ -112,17 +114,23 @@ const mergeData = (debugData: any, mainData: any, dataName: string, parents: ICi
     out.strippedSubRegions = data.regionData;
   }
 
+  out.subRegions?.flat().forEach((ksn, i) => {
+    ksn.parent = parents[parents.length - 1].obj;
+    if (ksn.array) ksn.regionPath = `${lastRegionPath}${i},${regionNum}`;
+  });
+
   parents.pop()
   return out;
 }
 
+// analyzes a single structure (called when expanding an instance too)
 export const analyzeStructure = (input: any, docComments: {[key: string]: string}, parents?: ICircleCheck[]) => {
   if (!parents) parents = [];
 
   const regionData = [];
-  const fullData = [];
+  const fullData: KSNode[] = [];
 
-  function dataRoutine(key: string, isInstance: boolean) {
+  function dataRoutine(key: string, keyIdx: number, isInstance: boolean) {
     let debugInf: any;
 
     const mainData = input[key];
@@ -136,12 +144,34 @@ export const analyzeStructure = (input: any, docComments: {[key: string]: string
       start: (merged.bitStart) ? merged.start - 1 + merged.bitStart / 8 : merged.start,
       end: (merged.bitEnd) ? merged.end - 1 + merged.bitEnd / 8 : merged.end,
       name: merged.name,
-      content: merged.content
+      content: merged.content, 
     };
 
-    const docComment = docComments[parents!.map(p => p.type).join(".")];
+    const docComment = docComments[parents!.map(p => p.type).join(".") + ((isInstance) ? '' : 'seq.') + key];
     if (docComment) {
-      simple.comments = docComment;
+      simple.doc = docComment;
+    }
+
+    if (merged.regionPath) {
+
+      const colorOffset = merged.regionPath.split(',').length % 10;
+      const colorIdx = colorOffset + keyIdx;
+      let mainValue = 0xFF - colorOffset * 5;
+      let otherValues = 100 + (colorOffset * 10);
+      if (colorIdx % 6 >= 3) {
+        const swap = otherValues;
+        otherValues = mainValue;
+        mainValue = swap;
+      }
+      let color = mainValue << ((colorIdx % 3) * 8);
+      color |= otherValues << (((colorIdx + 1) % 3) * 8);
+      color |= otherValues << (((colorIdx + 2) % 3) * 8);
+      // if (color > 0xFFFFFF) {
+      //   color |= 0xF;
+      //   color &= 0xFFFFFF;
+      // }
+
+      simple.color = `#${color.toString(16)}`;
     }
 
     if (merged.strippedSubRegions) {
@@ -154,49 +184,52 @@ export const analyzeStructure = (input: any, docComments: {[key: string]: string
   }
 
   // find / get sequence
-  for (const key of Object.keys(input._debug)) {
+  for (const [i, key] of Object.keys(input._debug).entries()) {
     if (key === 'arr') continue;
     else {
-      dataRoutine(key, false);
+      dataRoutine(key, i, false);
     }
   };
 
   // find / get instances
-  for (const key of Reflect.ownKeys(input.__proto__).map(k => k.toString())) {
+  for (const [keyIdx, key] of Reflect.ownKeys(input.__proto__).map(k => k.toString()).entries()) {
     if (["constructor", "_read"].includes(key) || key.startsWith('_m_')) continue;
     if (opts.eager) {
       if (input[key] == undefined) continue;
-      if (input.constructor.name !== input[key].constructor.name) dataRoutine(key, true);
+      if (input.constructor.name !== input[key].constructor.name) dataRoutine(key, keyIdx, true);
       else {
         // prevents indefinitely recursive types from parsing infinitely (ex. linked lists)
-        let toPush = {
+        let toPush: KSNode = {
           type: "[rec]",
           name: key,
-          analysisLeaf: null,
+          analysisLeaf: undefined,
+          parent: parents[parents.length - 1].obj,
           regionPath:
             (parents.length > 0)
             ? `${parents[parents.length - 1].regionPath},${regionData.length}`
             : `${regionData.length}`
         }
-        toPush.analysisLeaf = new analysisLeaf(toPush, input, opts.callback);
-        regionData.push({start: NaN, end: NaN, name: '', content: ''});
+        toPush.analysisLeaf = new analysisLeaf(toPush, input, opts.callback, docComments);
+        regionData.push({start: -1, end: -1, name: '', content: ''});
         fullData.push(toPush);
       }
     }
     else {
       // enables the continuation of parsing on command
-      let toPush = {
+      let toPush: KSNode = {
         type: "[instance]",
         name: key,
-        analysisLeaf: null,
+        analysisLeaf: undefined,
+        parent: parents[parents.length - 1].obj,
+        subRegions: [],
         regionPath:
           (parents.length > 0)
           ? `${parents[parents.length - 1].regionPath},${regionData.length}`
           : `${regionData.length}`
       }
       // the callback is necessary to update the region data
-      toPush.analysisLeaf = new analysisLeaf(toPush, input, opts.callback);
-      regionData.push({start: NaN, end: NaN, name: '', content: ''});
+      toPush.analysisLeaf = new analysisLeaf(toPush, input, opts.callback, docComments);
+      regionData.push({start: -1, end: -1, name: '', content: '', subRegions: []});
       fullData.push(toPush);
     }
   }
@@ -205,6 +238,37 @@ export const analyzeStructure = (input: any, docComments: {[key: string]: string
     regionData,
     fullData
   }
+}
+
+export const simplify = (regionData: KSNode[]) => {
+  const out: ISimple[] = [];
+  
+  for (const node of regionData) {
+    let subRegions: ISimple[] | ISimple[][] = undefined;
+    
+    if (node.subRegions) {
+      if (Array.isArray(node.subRegions[0])) {
+        subRegions = (node.subRegions as KSNode[][]).map((region: KSNode[]) => {
+          return simplify(region);
+        });
+      } else {
+        subRegions = simplify(node.subRegions as KSNode[]);
+      }
+    }
+    
+    const simpleNode: ISimple = {
+      start: (node.bitStart) ? node.start - 1 + node.bitStart / 8 : node.start,
+      end: (node.bitEnd) ? node.end - 1 + node.bitEnd / 8 : node.end,
+      name: node.name,
+      content: node.content,
+      doc: undefined, // TODO: debug comments 
+      subRegions
+    };
+
+    out.push(simpleNode);
+  };
+
+  return out;
 }
 
 export class analysisLeaf {
@@ -225,18 +289,20 @@ export class analysisLeaf {
     debugInf = input._debug[`_m_${key}`];
 
     if (mainData == undefined) return;
+    this.docComments ??= {};
     const merged = mergeData(debugInf, mainData, key, [], this.elementData.regionPath, this.docComments);
 
     const simple: ISimple = {
       start: merged.start,
       end: merged.end,
       name: merged.name,
-      content: merged.content
+      content: merged.content,
+      // subRegions: []
     };
 
-    const docComment = this.docComments[this.parent.map(p => p.type).join(".")];
+    const docComment = Array.isArray(this.parent) ? this.docComments[this.parent.map(p => p.type).join(".")] : this.docComments[this.parent.constructor.name];
     if (docComment) {
-      simple.comments = docComment;
+      simple.doc = docComment;
     }
 
     if (merged.strippedSubRegions) {
@@ -248,10 +314,13 @@ export class analysisLeaf {
     let rp = this.elementData.regionPath.split(",");
     for (let i = 0; i < rp.length - 1; i++) {
       r = r[parseInt(rp[i])]
-      if (r.subRegions) r = r.subRegions;
-      else {
+      rp[i] = r.name;
+      if (r.subRegions) {
+        r = r.subRegions;
+      } else if (!Array.isArray(r)) {
         console.error("somehow didn't do regions right...")
         console.log(r);
+        console.log(rp);
         return merged;
       }
     }
@@ -262,3 +331,4 @@ export class analysisLeaf {
     return merged;
   }
 }
+

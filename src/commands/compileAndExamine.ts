@@ -50,6 +50,7 @@ export class CompileAndExamineCommand implements Command {
       if (parsedFunction != null)
         this.hexEditorManager.hexEditor.updateKaitaiStruct(parsedFunction, this.ksEngine.docComments);
     } catch (e) {
+      console.log(e);
       vscode.window.showErrorMessage(`Error with KS definition: ${e}`);
     }
   }

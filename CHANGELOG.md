@@ -1,6 +1,19 @@
 # Change Log
 All notable changes to the "kaitai-struct-vscode" extension will be documented in this file.
 
+## [Version 1.0.0]
+### Bugfixes
+- WHOOPS I managed to break instances 8 months ago and never got around to fixing that
+  - (in previous versions it only worked with the "eager analysis" box checked)
+- Error messages from compilation now properly show the path to the problem
+
+### Additions
+- kaitai struct compiler is updated once more (with VERY beta typescript support)
+- KSExplorer renamed to "Kaitai Struct Explorer"
+  - keyboard navigation for this panel improved
+- more colors to differentiate between regions with varying levels of saturation depending on depth
+- doc comments are shown when hovering over a region
+
 ## [Version 0.9.0]
 ### Bugfixes
 - _unchecking_ the "chunk selected" option will now immediately display the full view once more
